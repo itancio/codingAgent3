@@ -13,10 +13,6 @@ This is a GitHub App that reviews pull requests and submits reviews with AI.
 2. Run NGROK in your terminal with the following command:
 
 ```bash
-npm run build
-npm run start
-
-
 ngrok http 3000
 ```
 
@@ -71,7 +67,9 @@ GROQ_API_KEY=<your-groq-api-key>
 8. Within the `SecureAgent` directory in your IDE, run the code with the following command:
 
 ```
+npm run build
 npm run start
+
 ```
 
 9. Create a pull request on your repository and watch the review agent submit a review!
