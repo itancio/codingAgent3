@@ -41,7 +41,15 @@ export const reviewFiles = async (
 ) => {
   const patches = files.map((file) => patchBuilder(file));
   const messages = convoBuilder(patches.join("\n"));
+  console.log(
+    "In review-agent.ts/reviewFile - messages convoBuilder: ",
+    messages
+  );
   const feedback = await reviewDiff(messages);
+  console.log(
+    "In review-agent.ts/reviewFile - feedback reviewDiff: ",
+    feedback
+  );
   return feedback;
 };
 
@@ -257,6 +265,32 @@ const generateGithubIssueUrl = (
   }
   return `[Create Issue](${url})`;
 };
+
+/****** START ADDED CODE ********/
+const generateGithubCommitUrl = (
+  owner: string,
+  repoName: string,
+  branch: string,
+  commitMessage: string,
+  changesDescription?: string,
+  codeblock?: string
+) => {
+  const encodedCommitMessage = encodeURIComponent(commitMessage);
+  const encodedChangesDescription = changesDescription
+    ? encodeURIComponent(`\nChanges: ${changesDescription}\n`)
+    : "";
+  const encodedCodeBlock = codeblock
+    ? encodeURIComponent(`\n${codeblock}\n`)
+    : "";
+
+  let url = `https://github.com/${owner}/${repoName}/commit/${branch}?message=${encodedCommitMessage}${encodedChangesDescription}${encodedCodeBlock}`;
+
+  if (url.length > 2048) {
+    url = `https://github.com/${owner}/${repoName}/commit/${branch}?message=${encodedCommitMessage}`;
+  }
+  return `[Create Commit](${url})`;
+};
+/****** END ADDED CODE ********/
 
 export const dedupSuggestions = (
   suggestions: PRSuggestion[]
