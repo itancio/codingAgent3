@@ -8,7 +8,7 @@ import {
 import { GROQ_MODEL, type GroqChatModel } from "./llms/groq";
 
 const ModelsToTokenLimits: Record<GroqChatModel, number> = {
-  "mixtral-8x7b-32768": 32768,
+  "mixtral-8x7b-32768": 5000,
   "gemma-7b-it": 32768,
   "llama3-70b-8192": 8192,
   "llama3-8b-8192": 8192,
@@ -54,8 +54,6 @@ export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designe
   Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
 
   Think through your suggestions and make exceptional improvements.`;
-
-
 
 export const XML_PR_REVIEW_PROMPT = `As the PR-Reviewer AI model, you are tasked to analyze git pull requests 
   across any programming language and provide comprehensive and precise code enhancements. 
