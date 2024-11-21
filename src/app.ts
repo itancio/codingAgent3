@@ -72,7 +72,7 @@ async function handlePullRequestOpened({
 
 // This sets up a webhook event listener.
 // When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value
-// of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened` 
+// of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened`
 // event handlerthat is defined above.
 //@ts-ignore
 reviewApp.webhooks.on("pull_request.opened", handlePullRequestOpened);
