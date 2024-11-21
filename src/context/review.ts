@@ -105,7 +105,7 @@ const trimHunk = (hunk: diff.Hunk): diff.Hunk => {
   return { ...hunk, lines: editLines, newStart: startIdx + hunk.newStart };
 };
 
-const buildingScopeString = (
+const buildingScopeString   = (
   currentFile: string,
   scope: Node,
   hunk: diff.Hunk

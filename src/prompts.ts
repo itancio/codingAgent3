@@ -87,9 +87,9 @@ Example output:
 
 Note: The 'comment' and 'describe' tags should elucidate the advice and why it’s given, while the 'code' tag hosts the recommended code snippet within proper GitHub Markdown syntax. The 'type' defines the suggestion's category such as performance, security, readability, etc.`;
 
-export const PR_SUGGESTION_TEMPLATE = `{COMMENT}
+export const PR_SUGGESTION_TEMPLATE = `
+{COMMENT}
 {ISSUE_LINK}
-
 {CODE}
 `;
 
