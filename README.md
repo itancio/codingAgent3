@@ -85,3 +85,12 @@ git branch -M main
 git remote add origin https://github.com/itancio/codingAgent3.git
 git push -u origin main
 ```
+
+---
+
+# Function Call Trace
+
+![miro](https://miro.com/app/board/uXjVLCxQ5jA=/)
+![img](public/images/functionCalls.png)
+
+![img](public/images/diagram.png)
