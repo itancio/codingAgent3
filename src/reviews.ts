@@ -120,20 +120,13 @@ export const getGitFile = async (
         },
       }
     );
-
-    if (
-      !Array.isArray(response.data) && // Ensure it's not a directory listing
-      response.data.type === "file" && // Ensure it's a file
-      "content" in response.data // Check if `content` exists
-    ) {
-      const decodedContent = Buffer.from(
-        response.data.content,
-        "base64"
-      ).toString("utf8");
-      return { content: decodedContent, sha: response.data.sha };
-    } else {
-      return { content: null, sha: null };
-    }
+    //@ts-ignore
+    const decodedContent = Buffer.from(
+      response.data.content,
+      "base64"
+    ).toString("utf8");
+    //@ts-ignore
+    return { content: decodedContent, sha: response.data.sha };
   } catch (exc) {
     if (exc.status === 404) {
       return { content: null, sha: null };
