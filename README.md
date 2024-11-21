@@ -64,7 +64,7 @@ GITHUB_WEBHOOK_SECRET=<your-webhook-secret>
 GROQ_API_KEY=<your-groq-api-key>
 ```
 
-8. Within the `SecureAgent` directory in your IDE, run the code with the following command:
+8. Within the `proj_codingAgent3` directory in your IDE, run the code with the following command:
 
 ```
 npm run build

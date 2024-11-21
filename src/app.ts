@@ -35,7 +35,8 @@ const getChangesPerFile = async (payload: WebhookEventMap["pull_request"]) => {
   }
 };
 
-// This adds an event handler that your code will call later. When this event handler is called, it will log the event to the console. Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
+// This adds an event handler that your code will call later. When this event handler is called, it will log the event to the console.
+// Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
 async function handlePullRequestOpened({
   octokit,
   payload,
@@ -68,7 +69,9 @@ async function handlePullRequestOpened({
   }
 }
 
-// This sets up a webhook event listener. When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened` event handler that is defined above.
+// This sets up a webhook event listener. When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value
+// of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened` event handler
+// that is defined above.
 //@ts-ignore
 reviewApp.webhooks.on("pull_request.opened", handlePullRequestOpened);
 
@@ -80,6 +83,8 @@ const reviewMiddleware = createNodeMiddleware(reviewApp.webhooks, {
 });
 
 const server = http.createServer((req, res) => {
+  console.log("server in app.ts - req: ", req.url);
+  console.log("server in app.ts - res: ", res);
   if (req.url === reviewWebhook) {
     reviewMiddleware(req, res);
   } else {
@@ -90,6 +95,6 @@ const server = http.createServer((req, res) => {
 
 // This creates a Node.js server that listens for incoming HTTP requests (including webhook payloads from GitHub) on the specified port. When the server receives a request, it executes the `middleware` function that you defined earlier. Once the server is running, it logs messages to the console to indicate that it is listening.
 server.listen(port, () => {
-  console.log(`Server is listening for events.`);
+  console.log(`Server in port ${port} is listening for events.`);
   console.log("Press Ctrl + C to quit.");
 });
