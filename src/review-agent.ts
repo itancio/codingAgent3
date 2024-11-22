@@ -32,6 +32,7 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const message = await generateChatCompletion({
     messages,
   });
+  console.log("In review-agent.ts/reviewDiff - message: ", message);
   return message;
 };
 
