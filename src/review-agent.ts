@@ -470,6 +470,10 @@ export const generateInlineComments = async (
 ): Promise<CodeSuggestion> => {
   try {
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
+    console.log(
+      "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
+      messages
+    );
     const { function_call } = await generateChatCompletion({
       messages,
       functions: [INLINE_FIX_FUNCTION],

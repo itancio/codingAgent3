@@ -1,11 +1,4 @@
-import { encode, encodeChat } from "gpt-tokenizer";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
-import type { PRFile } from "./constants";
-import {
-  rawPatchStrategy,
-  smarterContextPatchStrategy,
-} from "./context/review";
-import { GROQ_MODEL, type GroqChatModel } from "./llms/groq";
 
 const SAMPLE_INPUT = `
 ## src/file1.py
@@ -104,11 +97,13 @@ ${SAMPLE_OUTPUT}
 Think critically and ensure the subtasks align with the overall goal of improving the code quality and effectiveness of the PR.
 `;
 
-export const getPlanPrompt = (diff: string): ChatCompletionMessageParam[] => {
+const getPlanPrompt = (diff: string): ChatCompletionMessageParam[] => {
     return [
       { role: "system", content: PLANNER_PROMPT },
       { role: "user", content: diff },
     ];
   };
 
-  
+export function generateSubtasks(diff: string): string[] {
+
+};
