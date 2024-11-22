@@ -26,17 +26,21 @@ import {
   getInlineFixPrompt,
 } from "./prompts/inline-prompt";
 import { getGitFile } from "./reviews";
+import { autonomousAgent } from "./multimodal";
 
 export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
-  const message = await generateChatCompletion({
-    messages,
-  });
+  // const message = await generateChatCompletion({
+  //   messages,
+  // });
+  console.log("In review-agent.ts/reviewDiff: Starting the autonomous agent to process the PR suggestion")
+  const message = await autonomousAgent(messages);
+
   // TODO: Change to:
   // const message = await autonous_agent(messages);
   // Sometimes the response is not a good response
   // Make sure to add an Evaluator here before return
 
-  return message.content;
+  return message;
 };
 
 export const reviewFiles = async (
@@ -389,6 +393,7 @@ export const reviewChanges = async (
   filteredFiles.map((file) => {
     file.patchTokenLength = getTokenLength(patchBuilder(file));
   });
+  console.log('In review-agent.ts/reviewChanges: Initiating patching files')
   // further subdivide if necessary, maybe group files by common extension?
   const patchesWithinModelLimit: PRFile[] = [];
   // these single file patches are larger than the full model context
@@ -400,12 +405,13 @@ export const reviewChanges = async (
     );
     if (patchWithPromptWithinLimit) {
       patchesWithinModelLimit.push(file);
+      console.log(`In review-agent.ts/reviewChanges: patches within mode limit has ${patchesWithinModelLimit.length}`)
     } else {
       patchesOutsideModelLimit.push(file);
+      console.log(`In review-agent.ts/reviewChanges: patches outside mode limit has ${patchesOutsideModelLimit.length}`)
     }
   });
 
-  console.log(`files within limits: ${patchesWithinModelLimit.length}`);
   const withinLimitsPatchGroups = processWithinLimitFiles(
     patchesWithinModelLimit,
     patchBuilder,
@@ -545,7 +551,7 @@ const preprocessFile = async (
 const reviewChangesRetry = async (files: PRFile[], builders: Builders[]) => {
   for (const { convoBuilder, responseBuilder } of builders) {
     try {
-      console.log(`Trying with convoBuilder: ${convoBuilder.name}.`);
+      console.log(`In review-agents.ts/reviewChangesRetry: Trying with convoBuilder: ${convoBuilder.name}.`);
       return await reviewChanges(files, convoBuilder, responseBuilder);
     } catch (error) {
       console.log(
