@@ -31,6 +31,10 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const message = await generateChatCompletion({
     messages,
   });
+  // TODO: Implement Evaluator
+  // Sometimes the response is not a good response
+  // Make sure to add an Evaluator here before return
+
   return message.content;
 };
 
@@ -343,12 +347,21 @@ const xmlResponseBuilder = async (
 ): Promise<BuilderResponse> => {
   console.log("IN XML RESPONSE BUILDER");
   const parsedXMLSuggestions = await processXMLSuggestions(feedbacks);
+  console.log(
+    "In review-agent.ts/xmlResponseBuilder - parsedXMLSuggestions: " +
+      parsedXMLSuggestions
+  );
+
   const comments = convertPRSuggestionToComment(
     owner,
     repoName,
     dedupSuggestions(parsedXMLSuggestions)
   );
   const commentBlob = comments.join("\n");
+  console.log(
+    "In review-agent.ts/xmlResponseBuilder - commentBlob: " + commentBlob
+  );
+
   return { comment: commentBlob, structuredComments: parsedXMLSuggestions };
 };
 
@@ -361,7 +374,7 @@ const basicResponseBuilder = async (
   feedbacks: string[]
 ): Promise<BuilderResponse> => {
   const commentBlob = feedbacks.join("\n");
-  console.log("IN BASIC RESPONSE BUILDER");
+  console.log(`IN BASIC RESPONSE BUILDER ${commentBlob}`);
   return { comment: commentBlob, structuredComments: [] };
 };
 
