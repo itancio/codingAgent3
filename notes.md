@@ -414,7 +414,119 @@ If a file is passed to `reviewChangesRetry`:
 
 This ensures robustness in generating meaningful reviews even when the AI struggles with one format.
 
-Would you like code examples for implementing this retry mechanism or details on how to construct specific prompts?
+---
+
+### **Explanation of the Code**
+
+This code handles **reviewing changes in a pull request (PR)** by processing files, generating suggestions, and determining if those suggestions are new or actionable. Here’s a breakdown of the main components:
+
+---
+
+### **1. `reviewChanges` Function**
+
+This function orchestrates the review process for multiple files in a PR, handling tasks like token limits, grouping, and feedback generation.
+
+#### **Flow**
+1. **Filter Files**:
+   - Filters out files that don’t meet certain criteria using `filterFile`.
+   - Calculates token lengths for patches using `getTokenLength`.
+
+2. **Categorize Files**:
+   - Files are split into two categories:
+     - **Within Model Limit**: Files that can fit within the token limits of the AI model.
+     - **Outside Model Limit**: Files that exceed token limits and cannot be processed.
+
+3. **Process Files**:
+   - Files within limits are processed using `processWithinLimitFiles`.
+   - Files outside limits are processed using `processOutsideLimitFiles`.
+   - Both processing functions group patches for review.
+
+4. **Generate Feedback**:
+   - Uses `reviewFiles` to generate feedback for each patch group.
+
+5. **Build Response**:
+   - Combines feedbacks into a final response using `responseBuilder`.
+
+---
+
+### **2. `indentCodeFix` Function**
+
+This function adjusts the indentation of suggested code fixes to match the original file’s formatting.
+
+#### **Steps**
+1. Splits the file into lines.
+2. Identifies the indentation of the first line in the target range.
+3. Prepends the same indentation to each line of the code suggestion.
+
+---
+
+### **3. `isCodeSuggestionNew` Function**
+
+This function checks if a code suggestion is already present in the file.
+
+#### **Steps**
+1. Extracts the lines of the file corresponding to the suggestion's start and end range.
+2. Compares the trimmed content of the extracted lines with the suggestion.
+3. Returns `false` if they are identical, indicating the suggestion is not new.
+
+---
+
+### **4. `generateInlineComments` Function**
+
+This function generates inline comments (code suggestions) using an AI model.
+
+#### **Flow**
+1. **Prompt Construction**:
+   - Builds a prompt using `getInlineFixPrompt`, passing the file's contents and suggestion.
+
+2. **AI Interaction**:
+   - Sends the prompt and a list of functions (including `INLINE_FIX_FUNCTION`) to the AI model.
+   - Parses the `function_call` response to extract arguments.
+
+3. **Generate Code Fix**:
+   - Indents the suggested code fix to match the file.
+   - Constructs a `CodeSuggestion` object containing the file, line range, correction, and comment.
+
+4. **Validation**:
+   - Checks if the suggestion is new using `isCodeSuggestionNew`.
+
+5. **Error Handling**:
+   - Logs and returns `null` if an error occurs.
+
+---
+
+### **5. `preprocessFile` Function**
+
+This function fetches the contents of a file for both the base and current branches in the PR.
+
+#### **Flow**
+1. **Fetch File Contents**:
+   - Retrieves the file's content from the base branch and the current branch using `getGitFile`.
+
+2. **Store Contents**:
+   - Stores the base branch content in `file.old_contents` and the current branch content in `file.current_contents`.
+
+3. **Null Handling**:
+   - Sets the contents to `null` if the file doesn’t exist.
+
+---
+
+### **Core Components and Logic**
+
+#### **Grouping and Token Limits**
+- Files are grouped based on whether they fit within the model’s token limits.
+- Files exceeding the limits are handled separately or skipped.
+
+#### **Feedback Generation**
+- `reviewFiles` reviews each patch group, generating actionable feedback.
+- The feedback is combined into a response using `responseBuilder`.
+
+#### **Error Handling**
+- Errors are logged and surfaced to ensure the process doesn’t silently fail.
+
+#### **AI Interaction**
+- The AI is leveraged via `generateChatCompletion` to provide specific code suggestions and inline comments.
+
 
 
 

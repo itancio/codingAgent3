@@ -1,4 +1,5 @@
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
+import { generateChatCompletion } from "./llms/chat";
 
 const SAMPLE_INPUT = `
 ## src/file1.py
@@ -104,6 +105,47 @@ const getPlanPrompt = (diff: string): ChatCompletionMessageParam[] => {
     ];
   };
 
-export function generateSubtasks(diff: string): string[] {
+  export const planner = async (messages: string): Promise<ChatCompletionMessageParam> => {
+    try {
+      const response = await generateChatCompletion({
+        messages: getPlanPrompt(messages),
+      });
+  
+      // Ensure response is valid
+      if (!response || !response.content) {
+        throw new Error("Planner response is invalid or empty.");
+      }
+      return response;
+    } catch (error) {
+      console.error("Error in planner:", error);
+      throw error;
+    }
+  };
+  
 
-};
+  export const autonomous_agent = async (messages: ChatCompletionMessageParam[]): Promise<void> => {
+    try {
+        // TODO: Add logic to process incoming messages and generate responses
+        const message = await generateChatCompletion({
+            messages,   
+        });
+
+        // Call planner with messages
+        const tasks = await planner(message.content);
+    
+        // Validate tasks
+        if (!Array.isArray(tasks)) {
+            throw new Error("Planner did not return a valid task list.");
+        }
+    
+        // Process each task
+        for (const task of tasks) {
+            console.log("Task:", task);
+            // TODO: Add execution logic for each task if needed
+        }
+    } catch (error) {
+      console.error("Error in autonomous_agent:", error);
+      throw error;
+    }
+  };
+  
