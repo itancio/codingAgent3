@@ -7,6 +7,7 @@ export const generateChatCompletion = async (
   const response = await groq.chat.completions.create({
     model: GROQ_MODEL,
     temperature: 0,
+    response_format: { type: "json_object" },
     ...options,
   });
   return response.choices[0].message;
