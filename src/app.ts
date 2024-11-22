@@ -86,7 +86,7 @@ reviewApp.webhooks.on("pull_request", async (context) => {
 
   if (["opened", "edited", "synchronize"].includes(action)) {
     console.log(
-      `Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
+      `ADD THIS: Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
     );
 
     await handlePullRequestOpened({
