@@ -5,38 +5,97 @@ import * as path from "path";
 import { execSync } from "child_process";
 
 interface MemoryItem {
-    subtask: string;
-    reasoning: string;
-    action: ActionInfo;
-    evaluation: EvaluationResponse;
-  }
-  
-  interface ExecutionResult {
-    generatedCode: string;
-    executionResult: string;
-  }
-  
-  interface ActionParameters {
-    prompt: string;
-  }
-  
-  interface ActionInfo {
+  subtask: string;
+  reasoning: string;
+  action: ActionInfo;
+  evaluation: EvaluationResponse;
+}
+
+interface ExecutionResult {
+  generatedCode: string;
+  executionResult: string;
+}
+
+interface ActionParameters {
+  prompt: string;
+}
+
+interface ActionInfo {
+  action: string;
+  parameters: ActionParameters;
+}
+
+interface EvaluationResponse {
+  evaluation: string;
+  retry: boolean;
+}
+
+interface Tasks {
     action: string;
-    parameters: ActionParameters;
-  }
-  
-  interface EvaluationResponse {
-    evaluation: string;
-    retry: boolean;
-  }
-  
-  interface FinalAnswerResponse {
-    finalAnswer: string;
+    description: string;
+}
+
+// Main autonomous agent that takes messages as input
+export const autonomousAgent = async (
+  messages: ChatCompletionMessageParam[]
+): Promise<MemoryItem[]> => {
+  // Generate initial query based on provided messages
+  const response = await generateChatCompletion({
+    messages,
+  });
+
+  if (!response || !response.content) {
+    throw new Error(
+      "Autonomous agent: Initial query response is invalid or empty."
+    );
   }
 
-export const planner = async (diff: string) => {
+  const userQuery = response.content;
+  const memory: MemoryItem[] = [];
+  const subtasks = await planner(userQuery);
 
-    const prompt = `
+  for (const subtask of subtasks) {
+    let evaluation: EvaluationResponse;
+
+    do {
+      const reasoning = await reasoner(userQuery, subtasks, subtask, memory);
+      const actionInfo = await actioner(
+        userQuery,
+        subtasks,
+        subtask,
+        reasoning.reasoning,
+        memory
+      );
+      const executionResult = await executor(
+        actionInfo.action,
+        actionInfo.parameters,
+        userQuery,
+        memory
+      );
+
+      evaluation = await evaluator(
+        userQuery,
+        subtasks,
+        subtask,
+        actionInfo,
+        executionResult,
+        memory
+      );
+
+      memory.push({
+        subtask,
+        reasoning: reasoning.reasoning,
+        action: actionInfo,
+        evaluation,
+      });
+    } while (evaluation.retry);
+  }
+
+  return memory;
+};
+
+const planner = async (diff: string) => {
+  const prompt = `
     You are PR-Reviewer, a language model designed to review git pull requests.
     Your task is to analyze the provided PR diff and break it into a set of well-defined
     subtasks aimed at improving the code.
@@ -82,17 +141,8 @@ export const planner = async (diff: string) => {
     ...
     '
     ---
-    Here is an example JSON response:
-    {tasks: [
-        {
-            action: "reasoning",
-            description: "Ensure code correctness by validating the 'transform' function in utils.py."
-        },
-        {
-            action: "generate_code",
-            description: "Implement a unit test for the 'transform' function in utils.py."
-        },
-    ]}
+    Here is an :
+
     ---
     **Instructions**:
     1. Replace \`{diff}\` with the actual PR diff provided as input.
@@ -103,35 +153,35 @@ export const planner = async (diff: string) => {
     Think critically and ensure the subtasks align with the overall goal of improving the code quality and effectiveness of the PR.
     `;
 
-    try {
-        const response = await generateChatCompletion({
-            messages: [
-                { role: "system", content: prompt },
-                { role: "user", content: diff },
-            ],
-        });
+  try {
+    const response = await generateChatCompletion({
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: diff },
+      ],
+    });
 
-        // Ensure response is valid
-        if (!response || !response.content) {
-        throw new Error("Planner response is invalid or empty.");
-        }
-        const content = response.content;
-        const subtasks = JSON.parse(content).tasks;
-        return subtasks;
-    } catch (error) {
-        console.error("Error in planner:", error);
-        throw error;
+    // Ensure response is valid
+    if (!response || !response.content) {
+      throw new Error("Planner response is invalid or empty.");
     }
+    const content = response.content;
+    const subtasks = JSON.parse(content).tasks;
+    return subtasks;
+  } catch (error) {
+    console.error("Error in planner:", error);
+    throw error;
+  }
 };
 
-export const reasoner = async (
-    query: string,
-    subtasks: string[],
-    currentTask: string,
-    memory: Record<string, any>[]
-  ): Promise<{ reasoning: string }> => {
-    // Construct the prompt without redundant query mentions
-    const prompt = `
+const reasoner = async (
+  query: string,
+  subtasks: string[],
+  currentTask: string,
+  memory: Record<string, any>[]
+): Promise<{ reasoning: string }> => {
+  // Construct the prompt without redundant query mentions
+  const prompt = `
   Given a general plans from query, you are tasked with providing reasoning for completing a specific subtask in a code review process.
   
   ---
@@ -177,45 +227,44 @@ export const reasoner = async (
       "reasoning": "2 sentences max on how to complete the current subtask."
   }
   `;
-  
-    try {
-        const response = await generateChatCompletion({
-            messages: [
-                { role: "system", content: prompt },
-                { role: "user", content: query },
-            ],
-        });
-  
-      // Ensure response validity
-      if (!response || !response.content) {
-        throw new Error("Reasoner response is invalid or empty.");
-      }
-  
-      // Parse response content as JSON
-      const parsedResponse = JSON.parse(response.content);
-  
-      // Ensure the response contains a "reasoning" field
-      if (!parsedResponse.reasoning) {
-        throw new Error("Reasoner response is missing the 'reasoning' field.");
-      }
-  
-      return parsedResponse;
-    } catch (error) {
-      console.error("Error in reasoner:", error);
-      throw error;
-    }
-  };
-  
 
-  export const actioner = async (
-    userQuery: string,
-    subtasks: string[],
-    currentSubtask: string,
-    reasoning: string,
-    memory: Record<string, any>[]
-  ): Promise<{ action: string; parameters: { prompt: string } }> => {
-    // Construct the prompt
-    const prompt = `
+  try {
+    const response = await generateChatCompletion({
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: query },
+      ],
+    });
+
+    // Ensure response validity
+    if (!response || !response.content) {
+      throw new Error("Reasoner response is invalid or empty.");
+    }
+
+    // Parse response content as JSON
+    const parsedResponse = JSON.parse(response.content);
+
+    // Ensure the response contains a "reasoning" field
+    if (!parsedResponse.reasoning) {
+      throw new Error("Reasoner response is missing the 'reasoning' field.");
+    }
+
+    return parsedResponse;
+  } catch (error) {
+    console.error("Error in reasoner:", error);
+    throw error;
+  }
+};
+
+const actioner = async (
+  userQuery: string,
+  subtasks: string[],
+  currentSubtask: string,
+  reasoning: string,
+  memory: Record<string, any>[]
+): Promise<{ action: string; parameters: { prompt: string } }> => {
+  // Construct the prompt
+  const prompt = `
   Given the user's query (long-term goal): '${userQuery}'
   
   The subtasks are:
@@ -252,39 +301,41 @@ export const reasoner = async (
       "parameters": {"prompt": "Explain how to complete the subtask."}
   }
   `;
-  
-    try {
-      // Send the prompt to the LLM and specify JSON mode
-      const response = await generateChatCompletion({
-        messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: userQuery },
-        ],
+
+  try {
+    // Send the prompt to the LLM and specify JSON mode
+    const response = await generateChatCompletion({
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: userQuery },
+      ],
     });
-  
-      // Parse the response as JSON
-      const responseJson = JSON.parse(response.content);
-  
-      // Ensure the response contains the required fields
-      if (!responseJson.action || !responseJson.parameters || !responseJson.parameters.prompt) {
-        throw new Error("Invalid response format from LLM");
-      }
-  
-      return responseJson;
-    } catch (error) {
-      console.error("Error in actioner:", error);
-      throw error;
+
+    // Parse the response as JSON
+    const responseJson = JSON.parse(response.content);
+
+    // Ensure the response contains the required fields
+    if (
+      !responseJson.action ||
+      !responseJson.parameters ||
+      !responseJson.parameters.prompt
+    ) {
+      throw new Error("Invalid response format from LLM");
     }
-  };
 
+    return responseJson;
+  } catch (error) {
+    console.error("Error in actioner:", error);
+    throw error;
+  }
+};
 
-  
-  export const generateAndExecuteCode = async (
-    prompt: string,
-    userQuery: string,
-    memory: MemoryItem[]
-  ): Promise<ExecutionResult> => {
-    const codeGenerationPrompt = `
+const generateAndExecuteCode = async (
+  prompt: string,
+  userQuery: string,
+  memory: MemoryItem[]
+): Promise<ExecutionResult> => {
+  const codeGenerationPrompt = `
   Generate Python code to implement the following task: '${prompt}'
   
   Here is the overall goal of answering the user's query: '${userQuery}'
@@ -347,33 +398,32 @@ export const reasoner = async (
     throw error;
   }
 };
-  
-  export const executor = async (
-    action: string,
-    parameters: ActionParameters,
-    userQuery: string,
-    memory: MemoryItem[]
-  ): Promise<any> => {
-    if (action === "generate_code") {
-      console.log(`Generating code for: ${parameters.prompt}`);
-      return generateAndExecuteCode(parameters.prompt, userQuery, memory);
-    } else if (action === "reasoning") {
-      return parameters.prompt;
-    } else {
-      throw new Error(`Action '${action}' not implemented.`);
-    }
-  };
-  
-  
-  export const evaluator = async (
-    userQuery: string,
-    subtasks: string[],
-    currentSubtask: string,
-    actionInfo: ActionInfo,
-    executionResult: ExecutionResult,
-    memory: MemoryItem[]
-  ): Promise<EvaluationResponse> => {
-    const prompt = `
+
+const executor = async (
+  action: string,
+  parameters: ActionParameters,
+  userQuery: string,
+  memory: MemoryItem[]
+): Promise<any> => {
+  if (action === "generate_code") {
+    console.log(`Generating code for: ${parameters.prompt}`);
+    return generateAndExecuteCode(parameters.prompt, userQuery, memory);
+  } else if (action === "reasoning") {
+    return parameters.prompt;
+  } else {
+    throw new Error(`Action '${action}' not implemented.`);
+  }
+};
+
+const evaluator = async (
+  userQuery: string,
+  subtasks: string[],
+  currentSubtask: string,
+  actionInfo: ActionInfo,
+  executionResult: ExecutionResult,
+  memory: MemoryItem[]
+): Promise<EvaluationResponse> => {
+  const prompt = `
   Given the user's query (long-term goal): '${userQuery}'
   
   The subtasks to complete to answer the user's query are:
@@ -425,32 +475,3 @@ export const reasoner = async (
     throw error;
   }
 };
-  
-export const autonomousAgent = async (
-    userQuery: string
-  ): Promise<MemoryItem[]> => {
-    const memory: MemoryItem[] = [];
-    const subtasks = await planner(userQuery);
-  
-    for (const subtask of subtasks) {
-      let evaluation: EvaluationResponse;
-  
-      do {
-        const reasoning = await reasoner(userQuery, subtasks, subtask, memory);
-        const actionInfo = await actioner(userQuery, subtasks, subtask, reasoning.reasoning, memory);
-        const executionResult = await executor(actionInfo.action, actionInfo.parameters, userQuery, memory);
-  
-        evaluation = await evaluator(userQuery, subtasks, subtask, actionInfo, executionResult, memory);
-  
-        memory.push({
-          subtask,
-          reasoning: reasoning.reasoning,
-          action: actionInfo,
-          evaluation,
-        });
-      } while (evaluation.retry);
-    }
-  
-    return memory;
-  };
-  
