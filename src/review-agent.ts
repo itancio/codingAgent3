@@ -31,7 +31,8 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const message = await generateChatCompletion({
     messages,
   });
-  // TODO: Implement Evaluator
+  // TODO: Change to:
+  // const message = await autonous_agent(messages);
   // Sometimes the response is not a good response
   // Make sure to add an Evaluator here before return
 
@@ -46,7 +47,7 @@ export const reviewFiles = async (
   const patches = files.map((file) => patchBuilder(file));
   const messages = convoBuilder(patches.join("\n"));
   console.log(
-    "In review-agent.ts/reviewFile - messages convoBuilder: ",
+    "In review-agent.ts/reviewFiles - messages convoBuilder: ",
     messages
   );
   const feedback = await reviewDiff(messages);
@@ -470,6 +471,10 @@ export const generateInlineComments = async (
 ): Promise<CodeSuggestion> => {
   try {
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
+    console.log(
+      "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
+      messages
+    );
     const { function_call } = await generateChatCompletion({
       messages,
       functions: [INLINE_FIX_FUNCTION],

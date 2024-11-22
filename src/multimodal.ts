@@ -1,43 +1,151 @@
-import { ChatCompletionCreateParams } from "groq-sdk/resources/chat/completions";
-import { PRSuggestionImpl } from "./data/PRSuggestionImpl";
+import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import { generateChatCompletion } from "./llms/chat";
-import { REVIEW_DIFF_PROMPT } from "./prompts";
+
+const SAMPLE_INPUT = `
+## src/file1.py
+
+@@ -12,5 +12,5 @@ def func1():
+  code line that already existed in the file...
+  code line that already existed in the file....
+  -code line that was removed in the PR
+  +new code line added in the PR
+  code line that already existed in the file...
+  code line that already existed in the file...
+
+@@ ... @@ def func2():
+...
+
+## src/file2.py
+...
+`;
+
+const SAMPLE_OUTPUT = `
+<tasks>
+  <subtask>
+    <action>reasoning</action>
+    <description>Analyze the new function call 'transform' in utils.py to ensure it is implemented correctly and handles edge cases.</description>
+  </subtask>
+  <subtask>
+    <action>generate_code</action>
+    <description>Generate a unit test for 'transform' in utils.py to verify its functionality with various inputs.</description>
+  </subtask>
+  <subtask>
+    <action>reasoning</action>
+    <description>Check if 'log_results' in main.py adheres to proper logging standards and doesn't expose sensitive information.</description>
+  </subtask>
+  <subtask>
+    <action>generate_code</action>
+    <description>Provide a more efficient implementation for 'save_to_db' in main.py to minimize database write latency.</description>
+  </subtask>
+</tasks>
+`;
 
 export const PLANNER_PROMPT = `
-    You are PR-Reviewer, a language model designed to review git pull requests.
-    Your task is to provide constructive and concise feedback for the PR, 
-    and also provide meaningful code suggestions.
-    Given an input: '{diff}', break down the task into as few subtasks as possible
-    in order to provide meaningful code suggestions.
+You are PR-Reviewer, a language model designed to review git pull requests.
+Your task is to analyze the provided PR diff and break it into a set of well-defined
+subtasks aimed at improving the code.
 
-    Example PR Diff input:
-    '
-    ## src/file1.py
+---
 
-    @@ -12,5 +12,5 @@ def func1():
-    code line that already existed in the file...
-    code line that already existed in the file....
-    -code line that was removed in the PR
-    +new code line added in the PR
-    code line that already existed in the file...
-    code line that already existed in the file...
+**Your Goals**:
+1. Provide constructive feedback for the PR.
+2. Suggest actionable improvements through clear and concise subtasks.
+3. Focus on the newly added lines in the PR (lines prefixed with '+').
 
-    @@ ... @@ def func2():
-    ...
+---
 
+**Task Actions**:
+Each subtask must specify one of the following actions:
+- **reasoning**: Explain why a specific improvement or verification is needed.
+- **generate_code**: Provide code-related suggestions or generate specific tests/implementations to enhance the PR.
 
-    ## src/file2.py
-    ...
-    '
+---
 
-    Here are the only 2 actions that can be taken for each subtask:
-    - generate_code: This action involves generating Python code and executing it in order to make a calculation or verification
-    - reasoning: This action involves providing reasoning for what to do to complete the subtask
+**Guidelines**:
+- Ensure your subtasks are logical, actionable, and relevant to the changes in the PR.
+- Subtasks must target improvements in:
+  - Code correctness and potential bug fixes.
+  - Performance optimizations.
+  - Security enhancements.
+  - Code readability and maintainability.
+- Avoid suggesting:
+  - Changes to lines not included in the diff.
+  - Adding comments, docstrings, or type hints unless absolutely necessary.
+- Represent the subtasks in an XML structure.
 
-    Each subtask should begin with either "reasoning" or "generate_code".
+---
 
-    Keep in mind the overall goal of answering the user's query throughout the planning process.
+**Example PR Input**:
+\`\`\`
+${SAMPLE_INPUT}
+\`\`\`
 
-    Return the result as a JSON list of strings, where each string is a subtask.
+**Example Output**:
+\`\`\`xml
+${SAMPLE_OUTPUT}
+\`\`\`
 
+---
+
+**Instructions**:
+1. Replace \`{diff}\` with the actual PR diff provided as input.
+2. Generate subtasks in an XML structure like the example above.
+3. Ensure the subtasks are minimal, focused, and help achieve meaningful improvements to the PR.
+4. Use precise descriptions for reasoning and code generation actions.
+
+---
+
+Think critically and ensure the subtasks align with the overall goal of improving the code quality and effectiveness of the PR.
 `;
+
+const getPlanPrompt = (diff: string): ChatCompletionMessageParam[] => {
+    return [
+      { role: "system", content: PLANNER_PROMPT },
+      { role: "user", content: diff },
+    ];
+  };
+
+  export const planner = async (messages: string): Promise<ChatCompletionMessageParam> => {
+    try {
+      const response = await generateChatCompletion({
+        messages: getPlanPrompt(messages),
+      });
+  
+      // Ensure response is valid
+      if (!response || !response.content) {
+        throw new Error("Planner response is invalid or empty.");
+      }
+      return response;
+    } catch (error) {
+      console.error("Error in planner:", error);
+      throw error;
+    }
+  };
+  
+
+  export const autonomous_agent = async (messages: ChatCompletionMessageParam[]): Promise<void> => {
+    try {
+        // TODO: Add logic to process incoming messages and generate responses
+        const message = await generateChatCompletion({
+            messages,   
+        });
+
+        // Call planner with messages
+        const tasks = await planner(message.content);
+    
+        // Validate tasks
+        if (!Array.isArray(tasks)) {
+            throw new Error("Planner did not return a valid task list.");
+        }
+    
+        // Process each task
+        for (const task of tasks) {
+            console.log("Task:", task);
+            // TODO: Add execution logic for each task if needed
+        }
+    } catch (error) {
+      console.error("Error in autonomous_agent:", error);
+      throw error;
+    }
+  };
+  
