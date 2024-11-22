@@ -29,14 +29,9 @@ import { getGitFile } from "./reviews";
 import { autonomousAgent } from "./multimodal";
 
 export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
-  // const message = await generateChatCompletion({
-  //   messages,
-  // });
-  console.log(
-    "In review-agent.ts/reviewDiff: Starting the autonomous agent to process the PR suggestion"
-  );
-  const message = await autonomousAgent(messages);
-
+  const message = await generateChatCompletion({
+    messages,
+  });
   return message;
 };
 
