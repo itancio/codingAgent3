@@ -41,8 +41,3 @@ export const PLANNER_PROMPT = `
     Return the result as a JSON list of strings, where each string is a subtask.
 
 `;
-export const generatePlan = async (
-  diff: string
-): ChatCompletionCreateParams[] => {
-
-};
