@@ -49,7 +49,7 @@ export const reviewFiles = async (
   const messages = convoBuilder(patches.join("\n"));
   console.log(
     "In review-agent.ts/reviewFiles - messages convoBuilder: ",
-    messages.slice(0, 50)
+    messages[0]
   );
   const feedback = await reviewDiff(messages);
   // console.log(
@@ -390,7 +390,7 @@ export const reviewChanges = async (
   filteredFiles.map((file) => {
     file.patchTokenLength = getTokenLength(patchBuilder(file));
   });
-  console.log("In review-agent.ts/reviewChanges: Initiating patching files");
+  console.log("In review-agent.ts/reviewChanges: Initiate patching files");
   // further subdivide if necessary, maybe group files by common extension?
   const patchesWithinModelLimit: PRFile[] = [];
   // these single file patches are larger than the full model context
@@ -402,14 +402,8 @@ export const reviewChanges = async (
     );
     if (patchWithPromptWithinLimit) {
       patchesWithinModelLimit.push(file);
-      console.log(
-        `In review-agent.ts/reviewChanges: patches within mode limit has ${patchesWithinModelLimit.length}`
-      );
     } else {
       patchesOutsideModelLimit.push(file);
-      console.log(
-        `In review-agent.ts/reviewChanges: patches outside mode limit has ${patchesOutsideModelLimit.length}`
-      );
     }
   });
 
@@ -423,9 +417,11 @@ export const reviewChanges = async (
     patchBuilder,
     convoBuilder
   );
-  console.log(`${withinLimitsPatchGroups.length} within limits groups.`);
   console.log(
-    `${patchesOutsideModelLimit.length} files outside limit, skipping them.`
+    `In review-agent.ts/reviewChanges: ${withinLimitsPatchGroups.length} within limits groups.`
+  );
+  console.log(
+    `In review-agent.ts/reviewChanges: ${patchesOutsideModelLimit.length} files outside limit, skipping them.`
   );
 
   const groups = [...withinLimitsPatchGroups, ...exceedingLimitsPatchGroups];
@@ -480,7 +476,7 @@ export const generateInlineComments = async (
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
     console.log(
       "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
-      messages.slice(0, 50)
+      messages[0]
     );
     const { function_call } = await generateChatCompletion({
       messages,
@@ -602,7 +598,9 @@ export const processPullRequest = async (
     ]);
     let inlineComments: CodeSuggestion[] = [];
     if (reviewComments.structuredComments.length > 0) {
-      console.log("STARTING INLINE COMMENT PROCESSING");
+      console.log(
+        "In review-agent.ts/processPullRequest: STARTING INLINE COMMENT PROCESSING"
+      );
       inlineComments = await Promise.all(
         reviewComments.structuredComments.map((suggestion) => {
           // find relevant file
