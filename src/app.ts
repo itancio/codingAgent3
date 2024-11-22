@@ -48,25 +48,30 @@ async function handlePullRequestOpened({
   console.log(
     `Received a pull request event for #${payload.pull_request.number}`
   );
-  // const reposWithInlineEnabled = new Set<number>([601904706, 701925328]);
-  // const canInlineSuggest = reposWithInlineEnabled.has(payload.repository.id);
+
   try {
-    console.log("pr info", {
+    console.log("PR Info:", {
       id: payload.repository.id,
       fullName: payload.repository.full_name,
       url: payload.repository.html_url,
     });
+
+    // Get the changes in the PR
     const files = await getChangesPerFile(payload);
+
+    // Process the pull request to generate a review
     const review: Review = await processPullRequest(
       octokit,
       payload,
       files,
       true
     );
+
+    // Apply the review to the PR
     await applyReview({ octokit, payload, review });
     console.log("Review Submitted");
   } catch (exc) {
-    console.log(exc);
+    console.error("Error handling pull request:", exc);
   }
 }
 
@@ -75,7 +80,21 @@ async function handlePullRequestOpened({
 // of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened`
 // event handlerthat is defined above.
 //@ts-ignore
-reviewApp.webhooks.on("pull_request.opened", handlePullRequestOpened);
+// This sets up a webhook event listener for pull requests
+reviewApp.webhooks.on("pull_request", async (context) => {
+  const { action, pull_request, repository } = context.payload;
+
+  if (["opened", "edited", "synchronize"].includes(action)) {
+    console.log(
+      `Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
+    );
+
+    await handlePullRequestOpened({
+      octokit: context.octokit,
+      payload: context.payload,
+    });
+  }
+});
 
 const port = process.env.PORT || 3000;
 const reviewWebhook = `/api/review`;
