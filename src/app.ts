@@ -38,7 +38,7 @@ const getChangesPerFile = async (payload: WebhookEventMap["pull_request"]) => {
 // This adds an event handler that your code will call later.
 // When this event handler is called, it will log the event to the console.
 // Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
-async function handlePullRequestOpened({
+async function handlePullRequestAction({
   octokit,
   payload,
 }: {
@@ -89,7 +89,7 @@ reviewApp.webhooks.on("pull_request", async (context) => {
       `Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
     );
 
-    await handlePullRequestOpened({
+    await handlePullRequestAction({
       octokit: context.octokit,
       payload: context.payload,
     });
