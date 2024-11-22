@@ -361,7 +361,7 @@ const basicResponseBuilder = async (
   feedbacks: string[]
 ): Promise<BuilderResponse> => {
   const commentBlob = feedbacks.join("\n");
-  console.log("IN BASIC RESPONSE BUILDER");
+  console.log(`IN BASIC RESPONSE BUILDER ${commentBlob}`);
   return { comment: commentBlob, structuredComments: [] };
 };
 
