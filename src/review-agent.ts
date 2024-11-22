@@ -49,7 +49,7 @@ export const reviewFiles = async (
   const messages = convoBuilder(patches.join("\n"));
   console.log(
     "In review-agent.ts/reviewFiles - messages convoBuilder: ",
-    messages
+    messages.slice(0, 50)
   );
   const feedback = await reviewDiff(messages);
   // console.log(
@@ -376,7 +376,7 @@ const basicResponseBuilder = async (
   feedbacks: string[]
 ): Promise<BuilderResponse> => {
   const commentBlob = feedbacks.join("\n");
-  console.log(`IN BASIC RESPONSE BUILDER ${commentBlob}`);
+  console.log(`IN BASIC RESPONSE BUILDER ${commentBlob.slice(0, 50)}`);
   return { comment: commentBlob, structuredComments: [] };
 };
 
@@ -480,7 +480,7 @@ export const generateInlineComments = async (
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
     console.log(
       "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
-      messages
+      messages.slice(0, 50)
     );
     const { function_call } = await generateChatCompletion({
       messages,
