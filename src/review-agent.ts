@@ -32,7 +32,9 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   // const message = await generateChatCompletion({
   //   messages,
   // });
-  console.log("In review-agent.ts/reviewDiff: Starting the autonomous agent to process the PR suggestion")
+  console.log(
+    "In review-agent.ts/reviewDiff: Starting the autonomous agent to process the PR suggestion"
+  );
   const message = await autonomousAgent(messages);
 
   return message;
@@ -50,10 +52,10 @@ export const reviewFiles = async (
     messages
   );
   const feedback = await reviewDiff(messages);
-  console.log(
-    "In review-agent.ts/reviewFile - feedback reviewDiff: ",
-    feedback
-  );
+  // console.log(
+  //   "In review-agent.ts/reviewFile - feedback reviewDiff: ",
+  //   feedback
+  // );
   return feedback;
 };
 
@@ -388,7 +390,7 @@ export const reviewChanges = async (
   filteredFiles.map((file) => {
     file.patchTokenLength = getTokenLength(patchBuilder(file));
   });
-  console.log('In review-agent.ts/reviewChanges: Initiating patching files')
+  console.log("In review-agent.ts/reviewChanges: Initiating patching files");
   // further subdivide if necessary, maybe group files by common extension?
   const patchesWithinModelLimit: PRFile[] = [];
   // these single file patches are larger than the full model context
@@ -400,10 +402,14 @@ export const reviewChanges = async (
     );
     if (patchWithPromptWithinLimit) {
       patchesWithinModelLimit.push(file);
-      console.log(`In review-agent.ts/reviewChanges: patches within mode limit has ${patchesWithinModelLimit.length}`)
+      console.log(
+        `In review-agent.ts/reviewChanges: patches within mode limit has ${patchesWithinModelLimit.length}`
+      );
     } else {
       patchesOutsideModelLimit.push(file);
-      console.log(`In review-agent.ts/reviewChanges: patches outside mode limit has ${patchesOutsideModelLimit.length}`)
+      console.log(
+        `In review-agent.ts/reviewChanges: patches outside mode limit has ${patchesOutsideModelLimit.length}`
+      );
     }
   });
 
@@ -546,7 +552,9 @@ const preprocessFile = async (
 const reviewChangesRetry = async (files: PRFile[], builders: Builders[]) => {
   for (const { convoBuilder, responseBuilder } of builders) {
     try {
-      console.log(`In review-agents.ts/reviewChangesRetry: Trying with convoBuilder: ${convoBuilder.name}.`);
+      console.log(
+        `In review-agents.ts/reviewChangesRetry: Trying with convoBuilder: ${convoBuilder.name}.`
+      );
       return await reviewChanges(files, convoBuilder, responseBuilder);
     } catch (error) {
       console.log(
