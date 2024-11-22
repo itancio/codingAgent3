@@ -35,11 +35,6 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   console.log("In review-agent.ts/reviewDiff: Starting the autonomous agent to process the PR suggestion")
   const message = await autonomousAgent(messages);
 
-  // TODO: Change to:
-  // const message = await autonous_agent(messages);
-  // Sometimes the response is not a good response
-  // Make sure to add an Evaluator here before return
-
   return message;
 };
 
@@ -555,7 +550,7 @@ const reviewChangesRetry = async (files: PRFile[], builders: Builders[]) => {
       return await reviewChanges(files, convoBuilder, responseBuilder);
     } catch (error) {
       console.log(
-        `Error with convoBuilder: ${convoBuilder.name}, trying next one. Error: ${error}`
+        `In review-agents.ts/reviewChangesRetry: Error with convoBuilder: ${convoBuilder.name}, trying next one. Error: ${error}`
       );
     }
   }
