@@ -347,6 +347,11 @@ const xmlResponseBuilder = async (
 ): Promise<BuilderResponse> => {
   console.log("IN XML RESPONSE BUILDER");
   const parsedXMLSuggestions = await processXMLSuggestions(feedbacks);
+  console.log(
+    "In review-agent.ts/xmlResponseBuilder - parsedXMLSuggestions: " +
+      parsedXMLSuggestions
+  );
+
   const comments = convertPRSuggestionToComment(
     owner,
     repoName,
@@ -356,6 +361,7 @@ const xmlResponseBuilder = async (
   console.log(
     "In review-agent.ts/xmlResponseBuilder - commentBlob: " + commentBlob
   );
+
   return { comment: commentBlob, structuredComments: parsedXMLSuggestions };
 };
 
