@@ -31,14 +31,14 @@ interface EvaluationResponse {
 }
 
 interface Tasks {
-    action: string;
-    description: string;
+  action: string;
+  description: string;
 }
 
 // Main autonomous agent that takes messages as input
 export const autonomousAgent = async (
   messages: ChatCompletionMessageParam[]
-): Promise<MemoryItem[]> => {
+): Promise<string> => {
   // Generate initial query based on provided messages
   const response = await generateChatCompletion({
     messages,
@@ -51,26 +51,26 @@ export const autonomousAgent = async (
   }
 
   const userQuery = response.content;
-  const memory: MemoryItem[] = [];
+  const memories: MemoryItem[] = [];
   const subtasks = await planner(userQuery);
 
   for (const subtask of subtasks) {
     let evaluation: EvaluationResponse;
 
     do {
-      const reasoning = await reasoner(userQuery, subtasks, subtask, memory);
+      const reasoning = await reasoner(userQuery, subtasks, subtask, memories);
       const actionInfo = await actioner(
         userQuery,
         subtasks,
         subtask,
         reasoning.reasoning,
-        memory
+        memories
       );
       const executionResult = await executor(
         actionInfo.action,
         actionInfo.parameters,
         userQuery,
-        memory
+        memories
       );
 
       evaluation = await evaluator(
@@ -79,10 +79,10 @@ export const autonomousAgent = async (
         subtask,
         actionInfo,
         executionResult,
-        memory
+        memories
       );
 
-      memory.push({
+      memories.push({
         subtask,
         reasoning: reasoning.reasoning,
         action: actionInfo,
@@ -90,8 +90,11 @@ export const autonomousAgent = async (
       });
     } while (evaluation.retry);
   }
+  const memories_str = memories
+    .map((memory) => `<memory> ${memoryItemToString(memory)} </memory>`) // Convert each MemoryItem to a string
+    .join("\n"); // Join all strings with a newline character
 
-  return memory;
+  return memories_str;
 };
 
 const planner = async (diff: string) => {
@@ -474,4 +477,18 @@ const evaluator = async (
     console.error("Error in evaluator:", error);
     throw error;
   }
+};
+
+/**
+ * Converts a MemoryItem to a human-readable string format.
+ */
+export const memoryItemToString = (memoryItem: MemoryItem): string => {
+  return `
+    Subtask: ${memoryItem.subtask}
+    Reasoning: ${memoryItem.reasoning}
+    Action: ${memoryItem.action.action}
+    Action Parameters: ${JSON.stringify(memoryItem.action.parameters, null, 2)}
+    Evaluation: ${memoryItem.evaluation.evaluation}
+    Retry: ${memoryItem.evaluation.retry}
+    `;
 };

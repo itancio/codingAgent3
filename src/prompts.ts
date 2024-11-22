@@ -8,7 +8,7 @@ import {
 import { GROQ_MODEL, type GroqChatModel } from "./llms/groq";
 
 const ModelsToTokenLimits: Record<GroqChatModel, number> = {
-  "mixtral-8x7b-32768": 32768,
+  "mixtral-8x7b-32768": 5000, // tokens per minute limit: 5000
   "gemma-7b-it": 32768,
   "llama3-70b-8192": 8192,
   "llama3-8b-8192": 8192,
