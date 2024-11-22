@@ -85,7 +85,6 @@ const reviewMiddleware = createNodeMiddleware(reviewApp.webhooks, {
 });
 
 const server = http.createServer((req, res) => {
-  console.log("server in app.ts - req: ", req.url);
   if (req.url === reviewWebhook) {
     reviewMiddleware(req, res);
   } else {

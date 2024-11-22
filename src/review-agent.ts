@@ -353,15 +353,20 @@ const xmlResponseBuilder = async (
 };
 
 const curriedXmlResponseBuilder = (owner: string, repoName: string) => {
-  return (feedbacks: string[]) =>
-    xmlResponseBuilder(owner, repoName, feedbacks);
+  return (feedbacks: string[]) => {
+    console.log(
+      `[curriedXmlResponseBuilder] Owner: ${owner}, Repo: ${repoName}, Feedbacks:`,
+      feedbacks
+    );
+    return xmlResponseBuilder(owner, repoName, feedbacks);
+  };
 };
 
 const basicResponseBuilder = async (
   feedbacks: string[]
 ): Promise<BuilderResponse> => {
-  console.log("IN BASIC RESPONSE BUILDER");
   const commentBlob = feedbacks.join("\n");
+  console.log(`IN BASIC RESPONSE BUILDER ${commentBlob}`);
   return { comment: commentBlob, structuredComments: [] };
 };
 
