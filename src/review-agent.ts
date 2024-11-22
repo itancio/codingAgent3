@@ -31,6 +31,10 @@ export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const message = await generateChatCompletion({
     messages,
   });
+  // TODO: Implement Evaluator
+  // Sometimes the response is not a good response
+  // Make sure to add an Evaluator here before return
+
   return message.content;
 };
 
@@ -349,6 +353,9 @@ const xmlResponseBuilder = async (
     dedupSuggestions(parsedXMLSuggestions)
   );
   const commentBlob = comments.join("\n");
+  console.log(
+    "In review-agent.ts/xmlResponseBuilder - commentBlob: " + commentBlob
+  );
   return { comment: commentBlob, structuredComments: parsedXMLSuggestions };
 };
 
