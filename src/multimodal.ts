@@ -122,6 +122,7 @@ const planner = async (diff: string) => {
       - Code correctness and potential bug fixes.
       - Performance optimizations.
       - Security enhancements.
+      - ignore console.log messages
       - Code readability and maintainability.
     - Avoid suggesting:
       - Changes to lines not included in the diff.
