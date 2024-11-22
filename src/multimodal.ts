@@ -92,8 +92,11 @@ export const autonomousAgent = async (
   }
   const memories_str = memories
     .map((memory) => `<memory> ${memoryItemToString(memory)} </memory>`) // Convert each MemoryItem to a string
-    .join("\n"); // Join all strings with a newline character
-
+    .join("\n"); // Join all strings
+  console.log(
+    "In multimodal.ts/autonomousAgent: memories:",
+    memories_str.slice(0, 50)
+  );
   return memories_str;
 };
 
