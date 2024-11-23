@@ -475,27 +475,25 @@ export const generateInlineComments = async (
       "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
       messages[0]
     );
-    const { function_call } = await generateChatCompletion({
+    const response = await generateChatCompletion({
       messages,
-      functions: [INLINE_FIX_FUNCTION],
-      function_call: { name: INLINE_FIX_FUNCTION.name },
+      response_format: { type: "json_object" },
     });
-    if (!function_call) {
-      throw new Error("No function call found");
-    }
-    const args = JSON.parse(function_call.arguments);
-    const initialCode = String.raw`${args["code"]}`;
+
+    const { code, lineStart, lineEnd, comment } = JSON.parse(response.content);
+
+    const initialCode = String.raw`${code}`;
     const indentedCode = indentCodeFix(
       file.current_contents,
       initialCode,
-      args["lineStart"]
+      lineStart
     );
     const codeFix = {
       file: suggestion.filename,
-      line_start: args["lineStart"],
-      line_end: args["lineEnd"],
+      line_start: lineStart,
+      line_end: lineEnd,
       correction: indentedCode,
-      comment: args["comment"],
+      comment: comment,
     };
     if (isCodeSuggestionNew(file.current_contents, codeFix)) {
       return codeFix;

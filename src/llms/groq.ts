@@ -8,4 +8,4 @@ export const groq = new Groq({
 
 export type GroqChatModel = ChatCompletionCreateParamsBase["model"];
 
-export const GROQ_MODEL: GroqChatModel = "gemma-7b-it";
+export const GROQ_MODEL: GroqChatModel =  "llama3-groq-70b-8192-tool-use-preview";

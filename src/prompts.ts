@@ -9,9 +9,12 @@ import { GROQ_MODEL, type GroqChatModel } from "./llms/groq";
 
 const ModelsToTokenLimits: Record<GroqChatModel, number> = {
   "mixtral-8x7b-32768": 5000, // tokens per minute limit is 5000 as of 11/22/2024
-  "gemma-7b-it": 32768,
+  "gemma-7b-it": 8192,
+  "gemma2-9b-it": 8192,
   "llama3-70b-8192": 8192,
   "llama3-8b-8192": 8192,
+  "llama-3.1-70b-versatile": 32768,
+  "llama3-groq-70b-8192-tool-use-preview": 8192,
 };
 
 export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designed to review git pull requests.
