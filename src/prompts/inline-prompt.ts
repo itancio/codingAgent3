@@ -29,7 +29,16 @@ export const INLINE_FIX_PROMPT = `
   Avoid including placeholders such as 'rest of code...'
 
   Please interpret the given directions and apply the necessary changes to the provided suggestion and file content. 
-  Make the modifications unambiguous and appropriate for utilizing in an inline suggestion on GitHub.`;
+  Make the modifications unambiguous and appropriate for utilizing in an inline suggestion on GitHub.
+  
+  The output should be in Json format:
+  {{
+    code: "Modified Code Snippet"
+    lineStart: "Starting Line Number from the file"
+    lineEnd: "Ending Line Number from the file"
+    comment: "Why this change improves the code"
+  }}
+  `;
 
 export const INLINE_FIX_FUNCTION = {
   name: "fix",

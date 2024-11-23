@@ -475,15 +475,14 @@ export const generateInlineComments = async (
       "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
       messages[0]
     );
-    const { function_call } = await generateChatCompletion({
+    const response = await generateChatCompletion({
       messages,
-      functions: [INLINE_FIX_FUNCTION],
-      function_call: { name: INLINE_FIX_FUNCTION.name },
+      response_format: { type: "json_object" },
     });
-    if (!function_call) {
-      throw new Error("No function call found");
-    }
-    const args = JSON.parse(function_call.arguments);
+
+    const args = response.content;
+    console.log("In review-agent.ts/generateInLineComments - args: ", args);
+
     const initialCode = String.raw`${args["code"]}`;
     const indentedCode = indentCodeFix(
       file.current_contents,
