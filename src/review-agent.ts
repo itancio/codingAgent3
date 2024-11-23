@@ -28,12 +28,17 @@ import {
 import { getGitFile } from "./reviews";
 import { autonomousAgent } from "./multimodal";
 
-export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
+export const reviewDiff = async (
+  messages: ChatCompletionMessageParam[]
+): Promise<string> => {
   const message = await generateChatCompletion({
     messages,
   });
   const content = message.content;
-  console.log("In review-agent.ts/reviewDiff - content: ", content);
+  console.log(
+    `In review-agent.ts/reviewDiff - content of type <${typeof content}>: `,
+    content
+  );
   return content;
 };
 
@@ -472,14 +477,21 @@ export const generateInlineComments = async (
   try {
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
     console.log(
-      "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
-      messages[0]
+      "In review-agent.ts/generateInLineComments - content getInLineFixPrompt: ",
+      messages[0].content.slice(0, 50) + "..."
     );
-    const { function_call } = await generateChatCompletion({
+    const response = await generateChatCompletion({
       messages,
       functions: [INLINE_FIX_FUNCTION],
       function_call: { name: INLINE_FIX_FUNCTION.name },
     });
+    console.log(
+      `In review-agent.ts/generateInLineComments response of <${typeof response}>: `,
+      response
+    );
+
+    const { function_call } = await response;
+
     if (!function_call) {
       throw new Error("No function call found");
     }
