@@ -35,10 +35,8 @@ const getChangesPerFile = async (payload: WebhookEventMap["pull_request"]) => {
   }
 };
 
-// This adds an event handler that your code will call later.
-// When this event handler is called, it will log the event to the console.
-// Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
-async function handlePullRequestAction({
+// This adds an event handler that your code will call later. When this event handler is called, it will log the event to the console. Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
+async function handlePullRequestOpened({
   octokit,
   payload,
 }: {
@@ -46,55 +44,96 @@ async function handlePullRequestAction({
   payload: WebhookEventMap["pull_request"];
 }) {
   console.log(
-    `In app.ts/handlePullRequestAction: Received a pull request event for #${payload.pull_request.number}`
+    `Received a pull request event for #${payload.pull_request.number}`
   );
-
+  // const reposWithInlineEnabled = new Set<number>([601904706, 701925328]);
+  // const canInlineSuggest = reposWithInlineEnabled.has(payload.repository.id);
   try {
-    console.log("PR Info:", {
+    console.log("pr info", {
       id: payload.repository.id,
       fullName: payload.repository.full_name,
       url: payload.repository.html_url,
     });
-
-    // Get the changes in the PR
     const files = await getChangesPerFile(payload);
-
-    // Process the pull request to generate a review
     const review: Review = await processPullRequest(
       octokit,
       payload,
       files,
       true
     );
-
-    // Apply the review to the PR
     await applyReview({ octokit, payload, review });
     console.log("Review Submitted");
   } catch (exc) {
-    console.error("Error handling pull request:", exc);
+    console.log(exc);
   }
 }
 
-// This sets up a webhook event listener.
-// When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value
-// of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened`
-// event handlerthat is defined above.
+// This sets up a webhook event listener. When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened` event handler that is defined above.
 //@ts-ignore
-// This sets up a webhook event listener for pull requests
-reviewApp.webhooks.on("pull_request", async (context) => {
-  const { action, pull_request, repository } = context.payload;
+reviewApp.webhooks.on("pull_request.opened", handlePullRequestOpened);
 
-  if (["opened", "edited", "synchronize"].includes(action)) {
-    console.log(
-      `Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
-    );
+/***********************  START VERSION 2 *******************************/
+// // This adds an event handler that your code will call later.
+// // When this event handler is called, it will log the event to the console.
+// // Then, it will use GitHub's REST API to add a comment to the pull request that triggered the event.
+// async function handlePullRequestAction({
+//   octokit,
+//   payload,
+// }: {
+//   octokit: Octokit;
+//   payload: WebhookEventMap["pull_request"];
+// }) {
+//   console.log(
+//     `In app.ts/handlePullRequestAction: Received a pull request event for #${payload.pull_request.number}`
+//   );
 
-    await handlePullRequestAction({
-      octokit: context.octokit,
-      payload: context.payload,
-    });
-  }
-});
+//   try {
+//     console.log("PR Info:", {
+//       id: payload.repository.id,
+//       fullName: payload.repository.full_name,
+//       url: payload.repository.html_url,
+//     });
+
+//     // Get the changes in the PR
+//     const files = await getChangesPerFile(payload);
+
+//     // Process the pull request to generate a review
+//     const review: Review = await processPullRequest(
+//       octokit,
+//       payload,
+//       files,
+//       true
+//     );
+
+//     // Apply the review to the PR
+//     await applyReview({ octokit, payload, review });
+//     console.log("Review Submitted");
+//   } catch (exc) {
+//     console.error("Error handling pull request:", exc);
+//   }
+// }
+
+// // This sets up a webhook event listener.
+// // When your app receives a webhook event from GitHub with a `X-GitHub-Event` header value
+// // of `pull_request` and an `action` payload value of `opened`, it calls the `handlePullRequestOpened`
+// // event handlerthat is defined above.
+// //@ts-ignore
+// // This sets up a webhook event listener for pull requests
+// reviewApp.webhooks.on("pull_request", async (context) => {
+//   const { action, pull_request, repository } = context.payload;
+
+//   if (["opened", "edited", "synchronize"].includes(action)) {
+//     console.log(
+//       `Handling pull request action '${action}' for #${pull_request.number} in repository ${repository.full_name}`
+//     );
+
+//     await handlePullRequestAction({
+//       octokit: context.octokit,
+//       payload: context.payload,
+//     });
+//   }
+// });
+/***********************  END VERSION 2 *******************************/
 
 const port = process.env.PORT || 3000;
 const reviewWebhook = `/api/review`;
