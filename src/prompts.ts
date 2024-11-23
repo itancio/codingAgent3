@@ -66,6 +66,7 @@ export const XML_PR_REVIEW_PROMPT = `As the PR-Reviewer AI model, you are tasked
   Ensure your suggestions are novel and haven't been previously incorporated in the '+' lines of the PR code. 
   Refrain from proposing enhancements that add docstrings, type hints, or comments. 
   Your recommendations should strictly target the '+' lines without suggesting the need for complete context such as the whole repo or codebase.
+  If the added lines, '+', are commented out, skip them don't make any recommendations or comments.
 
   Your code suggestions should match the programming language in the PR, 
   steer clear of needless repetition or inclusion of 'type' and 'description' fields.
