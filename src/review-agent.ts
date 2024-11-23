@@ -484,8 +484,37 @@ export const generateInlineComments = async (
 
     const response = await generateChatCompletion({
       messages,
-      tools: [INLINE_FIX_FUNCTION],
-      tool_call: { name: INLINE_FIX_FUNCTION.function.name },
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "autonomousAgent",
+            description: "Apply a code fix based on a suggestion and rectify the issue.",
+            parameters: {
+              type: "object",
+              properties: {
+                code: {
+                  type: "string",
+                  description: "The code to be fixed.",
+                },
+                lineStart: {
+                  type: "number", 
+                  description: "The starting line number of the code to be fixed.",
+                },
+                lineEnd: {
+                  type: "number",
+                  description: "The ending line number of the code to be fixed.",
+                },
+                comment: {
+                  type: "string",
+                  description: "The comment explaining the code fix.",
+                },
+              },
+              output: ["comment", "code", "lineStart", "lineEnd"], // Ensure required fields are specified
+            },
+          },
+        },
+      ],
     });
 
     console.log(
@@ -494,13 +523,13 @@ export const generateInlineComments = async (
     );
 
     // Retrieve tool_call from the response
-    const tool_call = response.tool_call;
+    const tool_call = response.tool_calls;
 
     if (!tool_call) {
       throw new Error("No tool_call found in the response.");
     }
 
-    const args = JSON.parse(tool_call.parameters);
+    const args = JSON.parse(tool_call. );
 
     // Handle the code fix
     const initialCode = String.raw`${args.code}`;
