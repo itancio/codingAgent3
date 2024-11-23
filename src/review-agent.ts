@@ -493,6 +493,7 @@ export const generateInlineComments = async (
     const codeFix = {
       file: suggestion.filename,
       line_start: args["lineStart"],
+
       line_end: args["lineEnd"],
       correction: indentedCode,
       comment: args["comment"],
