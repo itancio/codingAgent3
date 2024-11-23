@@ -48,7 +48,7 @@ export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designe
   - Don't suggest adding docstring, type hints, or comments.
   - Suggestions should focus on improving the new code added in the PR (lines starting with '+')
   - Do not say things like without seeing the full repo, or full code, or rest of the codebase. Comment only on the code you have!
-
+  - Avoid making suggestions on commented out codes
   Make sure the provided code suggestions are in the same programming language.
 
   Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
@@ -65,7 +65,9 @@ export const XML_PR_REVIEW_PROMPT = `As the PR-Reviewer AI model, you are tasked
 
   Ensure your suggestions are novel and haven't been previously incorporated in the '+' lines of the PR code. 
   Refrain from proposing enhancements that add docstrings, type hints, or comments. 
+
   Your recommendations should strictly target the '+' lines without suggesting the need for complete context such as the whole repo or codebase.
+  If the added line '+' is a commented out comment '//This is a comment', ignore it and don't make any suggestions.
 
   Your code suggestions should match the programming language in the PR, 
   steer clear of needless repetition or inclusion of 'type' and 'description' fields.

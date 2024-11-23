@@ -473,34 +473,41 @@ const isCodeSuggestionNew = (
 export const generateInlineComments = async (
   suggestion: PRSuggestion,
   file: PRFile
-): Promise<CodeSuggestion> => {
+): Promise<CodeSuggestion | null> => {
   try {
     const messages = getInlineFixPrompt(file.current_contents, suggestion);
+
     console.log(
-      "In review-agent.ts/generateInLineComments - content getInLineFixPrompt: ",
+      "In review-agent.ts/generateInlineComments - Prompt message:",
       messages[0].content.slice(0, 50) + "..."
     );
+
     const response = await generateChatCompletion({
       messages,
-      functions: [INLINE_FIX_FUNCTION],
-      function_call: { name: INLINE_FIX_FUNCTION.name },
+      tools: [INLINE_FIX_FUNCTION],
+      tool_call: { name: INLINE_FIX_FUNCTION.function.name },
     });
+
     console.log(
-      `In review-agent.ts/generateInLineComments response of <${typeof response}>: `,
+      `In review-agent.ts/generateInlineComments response of <${typeof response}>: `,
       response
     );
 
-    const { function_call } = await response;
+    // Retrieve tool_call from the response
+    const tool_call = response.tool_call;
 
-    if (!function_call) {
-      throw new Error("No function call found");
+    if (!tool_call) {
+      throw new Error("No tool_call found in the response.");
     }
-    const args = JSON.parse(function_call.arguments);
-    const initialCode = String.raw`${args["code"]}`;
+
+    const args = JSON.parse(tool_call.parameters);
+
+    // Handle the code fix
+    const initialCode = String.raw`${args.code}`;
     const indentedCode = indentCodeFix(
       file.current_contents,
       initialCode,
-      args["lineStart"]
+      args.lineStart
     );
     const codeFix = {
       file: suggestion.filename,
