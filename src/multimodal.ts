@@ -9,7 +9,6 @@ interface MemoryItem {
   reasoning: string;
   action: ActionInfo;
   evaluation: EvaluationResponse;
-  toString: () => string;
 }
 
 interface ExecutionResult {
