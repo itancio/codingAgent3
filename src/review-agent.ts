@@ -480,8 +480,7 @@ export const generateInlineComments = async (
       response_format: { type: "json_object" },
     });
 
-    const { code, lineStart,, lineEnd, comment } = response.content;
-    console.log("In review-agent.ts/generateInLineComments - args: ", args);
+    const { code, lineStart, lineEnd, comment } = JSON.parse(response.content);
 
     const initialCode = String.raw`${code}`;
     const indentedCode = indentCodeFix(

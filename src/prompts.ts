@@ -13,7 +13,7 @@ const ModelsToTokenLimits: Record<GroqChatModel, number> = {
   "gemma2-9b-it": 8192,
   "llama3-70b-8192": 8192,
   "llama3-8b-8192": 8192,
-  "llama-3.1-70b-versatile" : 32768,
+  "llama-3.1-70b-versatile": 32768,
   "llama3-groq-70b-8192-tool-use-preview": 8192,
 };
 
