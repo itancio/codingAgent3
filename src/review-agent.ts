@@ -480,21 +480,21 @@ export const generateInlineComments = async (
       response_format: { type: "json_object" },
     });
 
-    const args = response.content;
+    const { code, lineStart,, lineEnd, comment } = response.content;
     console.log("In review-agent.ts/generateInLineComments - args: ", args);
 
-    const initialCode = String.raw`${args["code"]}`;
+    const initialCode = String.raw`${code}`;
     const indentedCode = indentCodeFix(
       file.current_contents,
       initialCode,
-      args["lineStart"]
+      lineStart
     );
     const codeFix = {
       file: suggestion.filename,
-      line_start: args["lineStart"],
-      line_end: args["lineEnd"],
+      line_start: lineStart,
+      line_end: lineEnd,
       correction: indentedCode,
-      comment: args["comment"],
+      comment: comment,
     };
     if (isCodeSuggestionNew(file.current_contents, codeFix)) {
       return codeFix;
