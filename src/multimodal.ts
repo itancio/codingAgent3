@@ -9,6 +9,7 @@ interface MemoryItem {
   reasoning: string;
   action: ActionInfo;
   evaluation: EvaluationResponse;
+  toString: () => string;
 }
 
 interface ExecutionResult {
@@ -91,7 +92,7 @@ export const autonomousAgent = async (
     } while (evaluation.retry);
   }
   const memories_str = memories
-    .map((memory) => `<memory> ${memoryItemToString(memory)} </memory>`) // Convert each MemoryItem to a string
+    .map((memory) => `<memory> ${memory.toString} </memory>`) // Convert each MemoryItem to a string
     .join("\n"); // Join all strings
   console.log(
     "In multimodal.ts/autonomousAgent: memories:",
@@ -481,18 +482,4 @@ const evaluator = async (
     console.error("Error in evaluator:", error);
     throw error;
   }
-};
-
-/**
- * Converts a MemoryItem to a human-readable string format.
- */
-export const memoryItemToString = (memoryItem: MemoryItem): string => {
-  return `
-    Subtask: ${memoryItem.subtask}
-    Reasoning: ${memoryItem.reasoning}
-    Action: ${memoryItem.action.action}
-    Action Parameters: ${JSON.stringify(memoryItem.action.parameters, null, 2)}
-    Evaluation: ${memoryItem.evaluation.evaluation}
-    Retry: ${memoryItem.evaluation.retry}
-    `;
 };

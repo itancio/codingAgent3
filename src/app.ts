@@ -27,7 +27,7 @@ const getChangesPerFile = async (payload: WebhookEventMap["pull_request"]) => {
       repo: payload.repository.name,
       pull_number: payload.pull_request.number,
     });
-    console.dir({ files }, { depth: null });
+    // console.dir({ files }, { depth: null });
     return files;
   } catch (exc) {
     console.log("exc");
@@ -46,7 +46,7 @@ async function handlePullRequestAction({
   payload: WebhookEventMap["pull_request"];
 }) {
   console.log(
-    `Received a pull request event for #${payload.pull_request.number}`
+    `In app.ts/handlePullRequestAction: Received a pull request event for #${payload.pull_request.number}`
   );
 
   try {
