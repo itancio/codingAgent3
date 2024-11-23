@@ -30,18 +30,18 @@ export const INLINE_FIX_PROMPT = `
 
   Please interpret the given directions and apply the necessary changes to the provided suggestion and file content. 
   Make the modifications unambiguous and appropriate for utilizing in an inline suggestion on GitHub.
-  
-  The output should be in JSON format:
-{
-  "code": "Modified Code Snippet",
-  "lineStart": "Starting Line Number from the file",
-  "lineEnd": "Ending Line Number from the file",
-  "comment": "Why this change improves the code"
-}
   `;
+const output = `
+  The output should be in JSON format:
+  {
+    "code": "Modified Code Snippet",
+    "lineStart": "Starting Line Number from the file",
+    "lineEnd": "Ending Line Number from the file",
+    "comment": "Why this change improves the code"
+  }`;
 
 export const INLINE_FIX_FUNCTION = {
-  name: "fix",
+  name: "fix_code",
   description: "The code fix to address the suggestion and rectify the issue",
   parameters: {
     type: "object",
@@ -56,11 +56,11 @@ export const INLINE_FIX_FUNCTION = {
       },
       lineStart: {
         type: "number",
-        description: "Starting Line Number",
+        description: "Starting Line Number from file",
       },
       lineEnd: {
         type: "number",
-        description: "Ending Line Number",
+        description: "Ending Line Number from file",
       },
     },
   },
