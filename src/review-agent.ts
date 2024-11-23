@@ -46,7 +46,7 @@ export const reviewFiles = async (
   const messages = convoBuilder(patches.join("\n"));
   console.log(
     "In review-agent.ts/reviewFiles - messages convoBuilder: ",
-    messages[0]
+    messages[0].content.slice(0, 50) + "..."
   );
   const feedback = await reviewDiff(messages);
   // console.log(
