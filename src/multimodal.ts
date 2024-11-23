@@ -43,6 +43,7 @@ export const autonomousAgent = async (
   // Generate initial query based on provided messages
   const response = await generateChatCompletion({
     messages,
+    response_format: { type: "json_object" },
   });
 
   if (!response || !response.content) {
