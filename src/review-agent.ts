@@ -483,35 +483,37 @@ export const generateInlineComments = async (
     if (!function_call) {
       throw new Error("No function call found");
     }
-    const args = JSON.parse(function_call.arguments);
-    const initialCode = String.raw`${args["code"]}`;
-    const indentedCode = indentCodeFix(
-      file.current_contents,
-      initialCode,
-      args["lineStart"]
-    );
-    const codeFix = {
-      file: suggestion.filename,
-      line_start: args["lineStart"],
-      line_end: args["lineEnd"],
-      correction: indentedCode,
-      comment: args["comment"],
-    };
-
-    // const { code, lineStart, lineEnd, comment } = JSON.parse(function_call.arguments);
-    // const initialCode = String.raw`${code}`;
+    // const args = JSON.parse(function_call.arguments);
+    // const initialCode = String.raw`${args["code"]}`;
     // const indentedCode = indentCodeFix(
     //   file.current_contents,
     //   initialCode,
-    //   lineStart
+    //   args["lineStart"]
     // );
     // const codeFix = {
     //   file: suggestion.filename,
-    //   line_start: lineStart,
-    //   line_end: lineEnd,
+    //   line_start: args["lineStart"],
+    //   line_end: args["lineEnd"],
     //   correction: indentedCode,
-    //   comment: comment,
+    //   comment: args["comment"],
     // };
+
+    const { code, lineStart, lineEnd, comment } = JSON.parse(
+      function_call.arguments
+    );
+    const initialCode = String.raw`${code}`;
+    const indentedCode = indentCodeFix(
+      file.current_contents,
+      initialCode,
+      lineStart
+    );
+    const codeFix = {
+      file: suggestion.filename,
+      line_start: lineStart,
+      line_end: lineEnd,
+      correction: indentedCode,
+      comment: comment,
+    };
     if (isCodeSuggestionNew(file.current_contents, codeFix)) {
       return codeFix;
     }
