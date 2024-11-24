@@ -38,6 +38,7 @@ export class PythonParser implements AbstractParser {
         traverse(childNode);
       }
     };
+    
     traverse(root);
 
     return {
@@ -60,61 +61,4 @@ export class PythonParser implements AbstractParser {
       };
     }
   }
-
-  private processNode = (
-    node: Parser.SyntaxNode,
-    lineStart: number,
-    lineEnd: number,
-    largestSize: number,
-    largestEnclosingContext: Parser.SyntaxNode | null
-  ): {
-    largestSize: number;
-    largestEnclosingContext: Parser.SyntaxNode | null;
-  } => {
-    const { startPosition, endPosition } = node;
-    if (startPosition.row <= lineStart && lineEnd <= endPosition.row) {
-      const size = endPosition.row - startPosition.row;
-      if (size > largestSize) {
-        largestSize = size;
-        largestEnclosingContext = node;
-      }
-    }
-    return { largestSize, largestEnclosingContext };
-  };
-
-  private traverseTree = (
-    cursor: Parser.TreeCursor,
-    lineStart: number,
-    lineEnd: number,
-    largestSize: number,
-    largestEnclosingContext: Parser.SyntaxNode | null
-  ): {
-    largestSize: number;
-    largestEnclosingContext: Parser.SyntaxNode | null;
-  } => {
-    do {
-      const node = cursor.currentNode;
-      ({ largestSize, largestEnclosingContext } = this.processNode(
-        node,
-        lineStart,
-        lineEnd,
-        largestSize,
-        largestEnclosingContext
-      ));
-
-      // Traverse children of the current node
-      if (cursor.gotoFirstChild()) {
-        ({ largestSize, largestEnclosingContext } = this.traverseTree(
-          cursor,
-          lineStart,
-          lineEnd,
-          largestSize,
-          largestEnclosingContext
-        ));
-        cursor.gotoParent(); // Return to the parent after processing children
-      }
-    } while (cursor.gotoNextSibling()); // Move to the next sibling
-
-    return { largestSize, largestEnclosingContext };
-  };
 }

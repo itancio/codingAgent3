@@ -1,5 +1,6 @@
 import { Node } from "@babel/traverse";
 import { JavascriptParser } from "./context/language/javascript-parser";
+import { PythonParser } from "./context/language/python-parser";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
 export interface PRFile {
