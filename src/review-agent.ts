@@ -2,13 +2,14 @@ import { Octokit } from "@octokit/rest";
 import { WebhookEventMap } from "@octokit/webhooks-definitions/schema";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import * as xml2js from "xml2js";
-import type {
-  BranchDetails,
-  BuilderResponse,
-  Builders,
-  CodeSuggestion,
-  PRFile,
-  PRSuggestion,
+import {
+  getParserForExtension,
+  type BranchDetails,
+  type BuilderResponse,
+  type Builders,
+  type CodeSuggestion,
+  type PRFile,
+  type PRSuggestion,
 } from "./constants";
 import { PRSuggestionImpl } from "./data/PRSuggestionImpl";
 import { generateChatCompletion } from "./llms/chat";
@@ -27,6 +28,7 @@ import {
 } from "./prompts/inline-prompt";
 import { getGitFile } from "./reviews";
 import { autonomousAgent } from "./multimodal";
+import { smarterContextPatchStrategy } from "./context/review";
 
 export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const message = await generateChatCompletion({
@@ -207,11 +209,94 @@ const processOutsideLimitFiles = (
       processGroups.push(group);
     });
     if (exceedingLimits.length > 0) {
-      console.log("TODO: Need to further chunk large file changes.");
-      // throw "Unimplemented"
+      exceedingLimits.forEach((file) => {
+        const chunks = chunkFileByLimit(file, patchBuilder, convoBuilder);
+        chunks.forEach((chunk) => processGroups.push([chunk]));
+      });
     }
   }
   return processGroups;
+};
+
+/**
+ * Helper function to chunk a file's patch into smaller pieces that fit within the model's token limit.
+ * Each chunk preserves its location and logical boundaries (e.g., complete functions or classes).
+ */
+const chunkFileByLimit = (
+  file: PRFile,
+  patchBuilder: (file: PRFile) => string,
+  convoBuilder: (diff: string) => ChatCompletionMessageParam[]
+): PRFile[] => {
+  const parser = getParserForExtension(file.filename);
+  if (!parser) {
+    throw new Error(`No parser available for file: ${file.filename}`);
+  }
+
+  const lines = file.patch.split("\n");
+  let currentChunk: string[] = [];
+  const chunks: PRFile[] = [];
+  let currentStartLine = 1; // Start tracking the line numbers
+
+  lines.forEach((line, index) => {
+    currentChunk.push(line);
+    const chunkAsString = currentChunk.join("\n");
+
+    const isWithinLimit = isConversationWithinLimit(
+      constructPrompt(
+        [{ ...file, patch: chunkAsString }],
+        patchBuilder,
+        convoBuilder
+      )
+    );
+
+    if (isWithinLimit) {
+      // Check if this is the end of a function or class
+      const enclosingContext = parser.findEnclosingContext(
+        file.current_contents,
+        currentStartLine,
+        index + 1
+      );
+
+      if (enclosingContext.enclosingContext === null) {
+        // Finalize the chunk
+        chunks.push({
+          ...file,
+          patch: chunkAsString,
+          patchTokenLength: getTokenLength(chunkAsString), // Optional: calculate token length
+          old_contents: file.old_contents, // Preserve old contents for context
+          current_contents: file.current_contents, // Preserve current contents
+        });
+        currentChunk = [];
+        currentStartLine = index + 2; // Move to the next line
+      }
+    } else if (currentChunk.length > 1) {
+      // Exceeds limit; finalize the current chunk without breaking context
+      currentChunk.pop(); // Remove the last line
+      const finalizedChunk = currentChunk.join("\n");
+      chunks.push({
+        ...file,
+        patch: finalizedChunk,
+        patchTokenLength: getTokenLength(finalizedChunk),
+        old_contents: file.old_contents,
+        current_contents: file.current_contents,
+      });
+      currentChunk = [line]; // Start a new chunk with the last line
+      currentStartLine = index + 1; // Update start line for the new chunk
+    }
+  });
+
+  if (currentChunk.length > 0) {
+    // Add any remaining lines as a final chunk
+    chunks.push({
+      ...file,
+      patch: currentChunk.join("\n"),
+      patchTokenLength: getTokenLength(currentChunk.join("\n")),
+      old_contents: file.old_contents,
+      current_contents: file.current_contents,
+    });
+  }
+
+  return chunks;
 };
 
 const processXMLSuggestions = async (feedbacks: string[]) => {
