@@ -477,7 +477,7 @@ export const generateInlineComments = async (
     );
     const { function_call } = await generateChatCompletion({
       messages,
-      functions: [INLINE_FIX_FUNCTION, autonomousAgent],
+      functions: [INLINE_FIX_FUNCTION],
       function_call: { name: INLINE_FIX_FUNCTION.name },
     });
     if (!function_call) {
