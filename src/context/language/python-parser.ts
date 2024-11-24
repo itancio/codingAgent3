@@ -20,11 +20,11 @@ export class PythonParser implements AbstractParser {
     const ast: Parser.Tree = this.parser.parse(file);
     const root: Parser.SyntaxNode = ast.rootNode;
     let largestSize = 0;
-    let largestEnclosingContext: Parser.SyntaxNode = null;
+    let largestEnclosingContext: Parser.SyntaxNode | null = null;
 
     const traverse = (node: Parser.SyntaxNode) => {
       const { startPosition, endPosition } = node;
-      const start = (startPosition.row = 1);
+      const start = startPosition.row + 1;
       const end = endPosition.row + 1;
 
       if (start <= lineStart && lineEnd <= end) {
@@ -34,11 +34,13 @@ export class PythonParser implements AbstractParser {
           largestEnclosingContext = node;
         }
       }
-      for (const childNode of node.children) {
+
+      // Traverse only named children of relevant nodes
+      for (const childNode of node.namedChildren) {
         traverse(childNode);
       }
     };
-    
+
     traverse(root);
 
     return {
