@@ -94,3 +94,7 @@ git push -u origin main
 ![img](public/images/functionCalls.png)
 
 ![img](public/images/diagram.png)
+
+---
+### Other sources
+[Python's AST](https://earthly.dev/blog/python-ast/)

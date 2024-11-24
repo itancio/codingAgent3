@@ -26,12 +26,15 @@ export class JavascriptParser implements AbstractParser {
     lineStart: number,
     lineEnd: number
   ): EnclosingContext {
+    // Parse the file using Babel parser
     const ast = parser.parse(file, {
       sourceType: "module",
       plugins: ["jsx", "typescript"], // To allow JSX and TypeScript
     });
+    
     let largestEnclosingContext: Node = null;
     let largestSize = 0;
+    // Traverse the AST to find the enclosing context
     traverse(ast, {
       Function(path) {
         ({ largestSize, largestEnclosingContext } = processNode(
