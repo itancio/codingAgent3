@@ -1,12 +1,11 @@
+import { Node } from "@babel/traverse";
+import * as diff from "diff";
 import {
   AbstractParser,
   PRFile,
   PatchInfo,
   getParserForExtension,
 } from "../constants";
-import * as diff from "diff";
-import { JavascriptParser } from "./language/javascript-parser";
-import { Node } from "@babel/traverse";
 
 const expandHunk = (
   contents: string,
@@ -105,7 +104,7 @@ const trimHunk = (hunk: diff.Hunk): diff.Hunk => {
   return { ...hunk, lines: editLines, newStart: startIdx + hunk.newStart };
 };
 
-const buildingScopeString   = (
+const buildingScopeString = (
   currentFile: string,
   scope: Node,
   hunk: diff.Hunk
