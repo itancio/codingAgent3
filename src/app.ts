@@ -46,10 +46,13 @@ async function handlePullRequestAction({
   console.log(
     `Received a pull request event for #${payload.pull_request.number}`
   );
+  payload.action
   if (
     payload.action === "opened" ||
     payload.action === "edited" ||
-    payload.action === "synchronize"
+    payload.action === "synchronize" ||
+    payload.action === "reopened" ||
+    payload.action === "ready_for_review"
   ) {
     // const reposWithInlineEnabled = new Set<number>([601904706, 701925328]);
     // const canInlineSuggest = reposWithInlineEnabled.has(payload.repository.id);
