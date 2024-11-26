@@ -60,37 +60,26 @@ export const REVIEW_DIFF_PROMPT = `
   Think through your suggestions and make exceptional improvements.`;
 
 export const XML_PR_REVIEW_PROMPT = `
-  As an expert pull request code reviewer, you are tasked to analyze git pull requests 
-  across any programming language and provide comprehensive and precise code enhancements. 
-  Keep your focus on the new code modifications indicated by '+' lines in the PR. 
-  Your feedback should hunt for code issues, opportunities for 
-  performance enhancement, 
-  security improvements, and 
-  ways to increase readability. 
+  As an expert pull request code reviewer, analyze given code, focusing exclusively on '+' lines.
+  Provide actionable, novel feedbacks in correctness,, performance, security, and readability,
+  and make comprehensive and precise code enhancement suggestions.
 
-  Ensure your suggestions are novel and haven't been previously incorporated in the '+' lines of the PR code. 
-  Refrain from proposing enhancements that add docstrings, type hints, or comments. 
-  Your recommendations should strictly target the '+' lines without suggesting the need for complete context such as the whole repo or codebase.
-  If the added lines, '+', are followe by commented out code or comments, skip them don't make any recommendations or comments.
-
-  Your code suggestions should match the programming language in the PR, 
-  steer clear of needless repetition or inclusion of 'type' and 'description' fields.
-
-  Formulate thoughtful suggestions aimed at strengthening performance, security, and readability, 
-  and represent them in an XML format utilizing the tags: 
-  <review>, 
-  <code>, 
-  <suggestion>, 
-  <comment>, 
-  <type>, 
-  <describe>, 
-  <filename>. 
-  While multiple recommendations can be given, they should all reside within one <review> tag.
-
-  Also note, all your code suggestions should follow the valid Markdown syntax for GitHub, 
-  identifying the language they're written in, and should be enclosed within backticks (\`\`\`). 
-
-  Don't hesitate to add as many constructive suggestions as are relevant to really improve the effectivity of the code.
+  Guidelines:
+  Skip + lines with comments or commented-out code.
+  Avoid suggesting additions like docstrings, type hints, or comments.
+  Limit feedback to the context of '+' lines without requiring the full repository or codebase.
+  Use valid Markdown syntax within backticks (\`\`\`) for code snippets, specifying the programming language.
+  Represent feedback in XML format with these tags:
+    <review>: Wraps all suggestions.
+    <suggestion>: Encapsulates each recommendation.
+    <describe>: Explains the purpose or intent of the code.
+    <type>: Categorizes suggestions (e.g., performance, security).
+    <comment>: Provides actionable guidance.
+    <code>: Includes suggested code changes.
+    <filename>: Names the relevant file.
+  Multiple suggestions can reside within one <review> tag.
+  Ensure all advice is constructive, thorough, and tailored to the programming language.
+  Provide as many suggestions as necessary to maximize code effectiveness.
 
   Example output:
   \`\`\`
@@ -115,7 +104,8 @@ export const XML_PR_REVIEW_PROMPT = `
 
   Note: The 'comment' and 'describe' tags should elucidate the advice and why it’s given, 
   while the 'code' tag hosts the recommended code snippet within proper GitHub Markdown syntax. 
-  The 'type' defines the suggestion's category such as performance, security, readability, etc.`;
+  The 'type' defines the suggestion's category such as performance, security, readability, etc.
+  `;
 
 export const PR_SUGGESTION_TEMPLATE = `
   {COMMENT}
