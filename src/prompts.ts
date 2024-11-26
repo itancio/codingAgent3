@@ -17,7 +17,10 @@ const ModelsToTokenLimits: Record<GroqChatModel, number> = {
   "llama3-groq-70b-8192-tool-use-preview": 8192,
 };
 
-export const DIFF_PROMPT_INPUT = `
+export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designed to review git pull requests.
+  Your task is to provide constructive and concise feedback for the PR, 
+  and also provide meaningful code suggestions.
+
   Example PR Diff input:
   '
   ## src/file1.py
@@ -37,11 +40,6 @@ export const DIFF_PROMPT_INPUT = `
   ## src/file2.py
   ...
   '
-`;
-
-export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designed to review git pull requests.
-  Your task is to provide constructive and concise feedback for the PR, 
-  and also provide meaningful code suggestions.
 
   The review should focus on new code added in the PR (lines starting with '+'), 
   and not on code that already existed in the file (lines starting with '-', or without prefix).
@@ -159,7 +157,7 @@ export const buildPatchPrompt = (file: PRFile) => {
 
 export const getReviewPrompt = (diff: string): ChatCompletionMessageParam[] => {
   return [
-    { role: "system", content: REVIEW_DIFF_PROMPT + DIFF_PROMPT_INPUT },
+    { role: "system", content: REVIEW_DIFF_PROMPT },
     { role: "user", content: diff },
   ];
 };
