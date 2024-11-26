@@ -17,7 +17,8 @@ const ModelsToTokenLimits: Record<GroqChatModel, number> = {
   "llama3-groq-70b-8192-tool-use-preview": 8192,
 };
 
-export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designed to review git pull requests.
+export const REVIEW_DIFF_PROMPT = `
+  You are expert PR-Reviewer, a language model designed to review git pull requests.
   Your task is to provide constructive and concise feedback for the PR, 
   and also provide meaningful code suggestions.
 
@@ -58,7 +59,8 @@ export const REVIEW_DIFF_PROMPT = `You are PR-Reviewer, a language model designe
 
   Think through your suggestions and make exceptional improvements.`;
 
-export const XML_PR_REVIEW_PROMPT = `As the PR-Reviewer AI model, you are tasked to analyze git pull requests 
+export const XML_PR_REVIEW_PROMPT = `
+  As an expert pull request code reviewer, you are tasked to analyze git pull requests 
   across any programming language and provide comprehensive and precise code enhancements. 
   Keep your focus on the new code modifications indicated by '+' lines in the PR. 
   Your feedback should hunt for code issues, opportunities for 
