@@ -94,9 +94,6 @@ export const XML_PR_REVIEW_PROMPT = `
   - Your code suggestions should match the programming language in the PR, 
   - Steer clear of needless repetition or inclusion of 'type' and 'description' fields.
 
-`;
-
-const XML_PROMPT_OUTPUT = `
   Formulate thoughtful suggestions aimed at strengthening performance, security, and readability, 
   and represent them in an XML format utilizing the tags: 
   <review>, 
@@ -137,6 +134,11 @@ const XML_PROMPT_OUTPUT = `
   Note: The 'comment' and 'describe' tags should elucidate the advice and why it’s given, 
   while the 'code' tag hosts the recommended code snippet within proper GitHub Markdown syntax. 
   The 'type' defines the suggestion's category such as performance, security, readability, etc.
+
+`;
+
+const XML_PROMPT_OUTPUT = `
+
 
 `;
 
@@ -191,7 +193,7 @@ export const getXMLReviewPrompt = (
   diff: string
 ): ChatCompletionMessageParam[] => {
   return [
-    { role: "system", content: XML_PR_REVIEW_PROMPT + XML_PROMPT_OUTPUT },
+    { role: "system", content: XML_PR_REVIEW_PROMPT },
     { role: "user", content: diff },
   ];
 };
