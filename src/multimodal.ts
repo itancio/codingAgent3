@@ -36,6 +36,30 @@ interface Tasks {
   description: string;
 }
 
+export class MemoryItemImpl implements MemoryItem {
+  subtask: string;
+  reasoning: string;
+  action: ActionInfo;
+  evaluation: EvaluationResponse;
+
+  constructor(
+    subtask: string,
+    reasoning: string,
+    action: ActionInfo,
+    evaluation: EvaluationResponse
+  ) {
+    this.subtask = subtask;
+    this.reasoning = reasoning;
+    this.action = action;
+    this.evaluation = evaluation;
+  };
+
+  toString(): string {
+    return `Subtask: ${this.subtask}\nReasoning: ${this.reasoning}\nAction: ${this.action.action}\nParameters: ${JSON.stringify(
+      this.action.parameters
+    )}\nEvaluation: ${this.evaluation.evaluation}\nRetry: ${this.evaluation.retry}\n`;
+  }
+};
 // Main autonomous agent that takes messages as input
 export const autonomousAgent = async (
   messages: ChatCompletionMessageParam[]
@@ -130,26 +154,6 @@ const planner = async (diff: string) => {
       - Adding comments, docstrings, or type hints unless absolutely necessary.
     - Return the result as a JSON list of strings, where each string is a subtask.
     ---
-    Here is an example of the input string:
-    '
-    ## src/file1.py
-
-    @@ -12,5 +12,5 @@ def func1():
-    code line that already existed in the file...
-    code line that already existed in the file....
-    -code line that was removed in the PR
-    +new code line added in the PR
-    code line that already existed in the file...
-    code line that already existed in the file...
-
-    @@ ... @@ def func2():
-    ...
-
-    ## src/file2.py
-    ...
-    '
-    ---
-    Here is an :
 
     ---
     **Instructions**:
