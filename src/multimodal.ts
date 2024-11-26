@@ -1,4 +1,7 @@
-import type { ChatCompletionMessage, ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
+import type {
+  ChatCompletionMessage,
+  ChatCompletionMessageParam,
+} from "groq-sdk/resources/chat/completions";
 import { generateChatCompletion } from "./llms/chat";
 import * as fs from "fs";
 import * as path from "path";
@@ -103,12 +106,12 @@ export const autonomousAgent = async (
 
 const generatePRSuggestionsForReviewDiff = async (
   memory: MemoryItem[]
-): Promise<ChatCompletionMessage > => {
+): Promise<ChatCompletionMessage> => {
   const prompt = `
   You are a processor of MemoryItems that extracts actionable suggestions from their content 
   and formats them into a structured pull request review. 
   Your task is to convert a list of MemoryItems into a cohesive review following this exact output format:
-  \`\`\`xml
+  \`\`\`
   <review>
   <suggestion>
     <describe>[Objective of the newly incorporated code]</describe>
@@ -126,6 +129,7 @@ const generatePRSuggestionsForReviewDiff = async (
   </suggestion>
   ...
 </review>
+\`\`\`
 
 Guidelines for Processing:
 Input Structure:
@@ -197,7 +201,7 @@ Example Input:
 ]
 
 Example output:
-
+\`\`\`
 <review>
   <suggestion>
     <describe>Optimize loop for better performance</describe>
