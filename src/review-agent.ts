@@ -27,6 +27,7 @@ import {
   getInlineFixPrompt,
 } from "./prompts/inline-prompt";
 import { getGitFile } from "./reviews";
+import { autonomousAgent } from "./multimodal";
 
 export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
   const response = await generateChatCompletion({
@@ -533,7 +534,7 @@ export const generateInlineComments = async (
       "In review-agent.ts/generateInLineComments - messages getInLineFixPrompt: ",
       messages[0]
     );
-    const { function_call } = await generateChatCompletion({
+    const { function_call } = await autonomousAgent({
       messages,
       functions: [INLINE_FIX_FUNCTION],
       function_call: { name: INLINE_FIX_FUNCTION.name },
