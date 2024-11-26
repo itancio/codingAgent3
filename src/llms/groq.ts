@@ -8,4 +8,4 @@ export const groq = new Groq({
 
 export type GroqChatModel = ChatCompletionCreateParamsBase["model"];
 
-export const GROQ_MODEL: GroqChatModel =  "llama-3.1-70b-versatile";
+export const GROQ_MODEL: GroqChatModel = "mixtral-8x7b-32768";
