@@ -27,14 +27,12 @@ import {
   getInlineFixPrompt,
 } from "./prompts/inline-prompt";
 import { getGitFile } from "./reviews";
-import { autonomousAgent } from "./multimodal";
-import { smarterContextPatchStrategy } from "./context/review";
 
 export const reviewDiff = async (messages: ChatCompletionMessageParam[]) => {
-  const message = await generateChatCompletion({
+  const response = await generateChatCompletion({
     messages,
   });
-  const content = message.content;
+  const content = response.content;
   console.log("In review-agent.ts/reviewDiff - content: ", content);
   return content;
 };
@@ -209,6 +207,7 @@ const processOutsideLimitFiles = (
       processGroups.push(group);
     });
     if (exceedingLimits.length > 0) {
+      // TODO: already implemented
       exceedingLimits.forEach((file) => {
         const chunks = chunkFileByLimit(file, patchBuilder, convoBuilder);
         chunks.forEach((chunk) => processGroups.push([chunk]));
@@ -353,32 +352,6 @@ const generateGithubIssueUrl = (
   }
   return `[Create Issue](${url})`;
 };
-
-/****** START ADDED CODE ********/
-const generateGithubCommitUrl = (
-  owner: string,
-  repoName: string,
-  branch: string,
-  commitMessage: string,
-  changesDescription?: string,
-  codeblock?: string
-) => {
-  const encodedCommitMessage = encodeURIComponent(commitMessage);
-  const encodedChangesDescription = changesDescription
-    ? encodeURIComponent(`\nChanges: ${changesDescription}\n`)
-    : "";
-  const encodedCodeBlock = codeblock
-    ? encodeURIComponent(`\n${codeblock}\n`)
-    : "";
-
-  let url = `https://github.com/${owner}/${repoName}/commit/${branch}?message=${encodedCommitMessage}${encodedChangesDescription}${encodedCodeBlock}`;
-
-  if (url.length > 2048) {
-    url = `https://github.com/${owner}/${repoName}/commit/${branch}?message=${encodedCommitMessage}`;
-  }
-  return `[Create Commit](${url})`;
-};
-/****** END ADDED CODE ********/
 
 export const dedupSuggestions = (
   suggestions: PRSuggestion[]

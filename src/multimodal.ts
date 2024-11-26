@@ -1,4 +1,4 @@
-import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
+import type { ChatCompletionMessage, ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import { generateChatCompletion } from "./llms/chat";
 import * as fs from "fs";
 import * as path from "path";
@@ -9,7 +9,6 @@ interface MemoryItem {
   reasoning: string;
   action: ActionInfo;
   evaluation: EvaluationResponse;
-  toString: () => string;
 }
 
 interface ExecutionResult {
@@ -36,10 +35,17 @@ interface Tasks {
   description: string;
 }
 
+export class MemoryItemImpl implements MemoryItem {
+  subtask: string;
+  reasoning: string;
+  action: ActionInfo;
+  evaluation: EvaluationResponse;
+}
+
 // Main autonomous agent that takes messages as input
 export const autonomousAgent = async (
   messages: ChatCompletionMessageParam[]
-): Promise<string> => {
+): Promise<ChatCompletionMessage> => {
   // Generate initial query based on provided messages
   const response = await generateChatCompletion({
     messages,
@@ -91,14 +97,143 @@ export const autonomousAgent = async (
       });
     } while (evaluation.retry);
   }
-  const memories_str = memories
-    .map((memory) => `<memory> ${memory.toString} </memory>`) // Convert each MemoryItem to a string
-    .join("\n"); // Join all strings
-  console.log(
-    "In multimodal.ts/autonomousAgent: memories:",
-    memories_str.slice(0, 50)
-  );
-  return memories_str;
+
+  return generatePRSuggestionsForReviewDiff(memories);
+};
+
+const generatePRSuggestionsForReviewDiff = async (
+  memory: MemoryItem[]
+): Promise<ChatCompletionMessage > => {
+  const prompt = `
+  You are a processor of MemoryItems that extracts actionable suggestions from their content 
+  and formats them into a structured pull request review. 
+  Your task is to convert a list of MemoryItems into a cohesive review following this exact output format:
+  \`\`\`xml
+  <review>
+  <suggestion>
+    <describe>[Objective of the newly incorporated code]</describe>
+    <type>[Category of the given suggestion such as performance, security, etc.]</type>
+    <comment>[Guidance on enhancing the new code]</comment>
+    <code>
+    \`\`\`[Programming Language]
+    [Equivalent code amendment in the same language]
+    \`\`\
+    </code>
+    <filename>[name of relevant file]</filename>
+  </suggestion>
+  <suggestion>
+  ...
+  </suggestion>
+  ...
+</review>
+
+Guidelines for Processing:
+Input Structure:
+
+Each MemoryItem includes:
+subtask: The objective of the new code.
+reasoning: An explanation of why the task or code change is necessary.
+action: Contains:
+action: The type of action performed (e.g., generate_code, reasoning).
+parameters.prompt: The code or reasoning prompt.
+evaluation: An assessment of the subtask execution.
+Use these fields to populate the <describe>, <type>, <comment>, <code>, and <filename> tags.
+Field Mapping:
+
+<describe>: Use the subtask field to describe the objective.
+<type>: Categorize as:
+Correctness for logical improvements or bug fixes.
+Performance for optimizations.
+Security for risk mitigation.
+Readability for clarity and maintainability.
+<comment>: Extract from the reasoning field to guide improvement.
+<code>: Use the parameters.prompt field to include the code, wrapping it in proper GitHub Markdown (enclosed in backticks).
+<filename>: If available, infer from parameters.prompt or use "unknown_file" as a fallback.
+Output Validation:
+
+Ensure all <suggestion> tags reside within a single <review> tag.
+Verify the integrity of Markdown syntax for code blocks.
+Suggestions must be actionable, precise, and relevant.
+Instructions:
+Parse the provided list of MemoryItems.
+
+For each MemoryItem:
+
+Extract and map the fields to the corresponding tags.
+Ensure valid formatting and categorize accurately.
+Combine all suggestions into a single <review> tag.
+
+Return the output strictly in the specified format, ensuring it is well-formed XML and includes valid Markdown for code blocks.
+Example Input:
+[
+  {
+    "subtask": "Optimize loop for better performance",
+    "reasoning": "The loop condition skips the last item in the array. Adjust to include all items.",
+    "action": {
+      "action": "generate_code",
+      "parameters": {
+        "prompt": "for (let i = 0; i < arr.length; i++) { process(arr[i]); }"
+      }
+    },
+    "evaluation": {
+      "evaluation": "Execution was successful.",
+      "retry": false
+    }
+  },
+  {
+    "subtask": "Prevent SQL injection vulnerabilities",
+    "reasoning": "Directly interpolating user inputs in SQL queries is a security risk.",
+    "action": {
+      "action": "generate_code",
+      "parameters": {
+        "prompt": "cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))"
+      }
+    },
+    "evaluation": {
+      "evaluation": "Execution was successful.",
+      "retry": false
+    }
+  }
+]
+
+Example output:
+
+<review>
+  <suggestion>
+    <describe>Optimize loop for better performance</describe>
+    <type>Performance</type>
+    <comment>The loop condition skips the last item in the array. Adjust to include all items.</comment>
+    <code>
+    \`\`\`javascript
+    for (let i = 0; i < arr.length; i++) { process(arr[i]); }
+    \`\`\`
+    </code>
+    <filename>unknown_file</filename>
+  </suggestion>
+  <suggestion>
+    <describe>Prevent SQL injection vulnerabilities</describe>
+    <type>Security</type>
+    <comment>Directly interpolating user inputs in SQL queries is a security risk.</comment>
+    <code>
+    \`\`\`python
+    cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+    \`\`\`
+    </code>
+    <filename>unknown_file</filename>
+  </suggestion>
+</review>
+
+  \`\`\`
+  `;
+
+  const response = await generateChatCompletion({
+    messages: [
+      { role: "system", content: prompt },
+      { role: "user", content: memory.toString() },
+    ],
+  });
+
+  return response;
 };
 
 const planner = async (diff: string) => {
