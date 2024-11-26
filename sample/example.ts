@@ -1,3 +1,3 @@
-Sample text
-
-Add more content here
+const test = () => {
+  console.log("This is a test function");
+};
